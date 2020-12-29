@@ -1,3 +1,7 @@
 from opoly.statements import ForLoopStatement
 
-# TODO
+
+def TestForLoopStatement():
+
+    def test_simple_creation(self):
+        ## TODO
