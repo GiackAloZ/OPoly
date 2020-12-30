@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import auto, Enum
 
+from opoly.expressions import Expression, VariableExpression
 
 class StatementType(Enum):
     FOR_LOOP = auto()
@@ -22,6 +23,24 @@ class Statement(ABC):
 
     def __str__(self):
         return self.stringify()
+
+
+class AssigmentStatement(Statement):
+    def __init__(self, left_term: VariableExpression, right_term: Expression):
+        super().__init__(StatementType.ASSIGNMENT)
+        self._left_term = left_term
+        self._right_term = right_term
+
+    @property
+    def left_term(self) -> VariableExpression:
+        return self._left_term
+
+    @property
+    def right_term(self) -> Expression:
+        return self._right_term
+
+    def stringify(self) -> str:
+        return f"{self.left_term} = {self.right_term}"
 
 
 class BlockStatement(Statement, ABC):
