@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import auto, Enum
 
-from opoly.expressions import Expression, VariableExpression
+from opoly.expressions import Expression, SingleExpression, VariableExpression, ConstantExpression
 
 
 class StatementType(Enum):
@@ -46,12 +46,14 @@ class AssigmentStatement(Statement):
 
 class BlockStatement(Statement, ABC):
 
-    def __init__(self, stm_type: StatementType, body: list[Statement]):
+    def __init__(self, stm_type: StatementType, body: tuple[Statement]):
         super().__init__(stm_type)
+        if not len(body) > 0:
+            raise ValueError("Block statement body cannot be empty!")
         self._body = body
 
     @property
-    def body(self) -> list[Statement]:
+    def body(self) -> tuple[Statement]:
         return self._body
 
     @abstractmethod
@@ -60,42 +62,52 @@ class BlockStatement(Statement, ABC):
 
     def stringify(self) -> str:
         head = self.stringify_head()
-        body = "\n".join([f"\t{s}" for s in self.body])
+        body = "\n".join([str(s) for s in self.body])
         return "\n".join([head, body])
 
 
 class ForLoopStatement(BlockStatement):
 
     def __init__(self,
-                 body: list[Statement],
-                 index: str,
-                 lb: int or str,
-                 ub: int or str,
-                 step: int = 1
+                 body: tuple[Statement],
+                 index: VariableExpression,
+                 lowerbound: Expression,
+                 upperbound: Expression,
+                 step: Expression = ConstantExpression(1)
                  ):
         super().__init__(StatementType.FOR_LOOP, body)
         self._index = index
-        self._lb = lb
-        self._ub = ub
-        if step == 0:
-            raise ValueError("Step size cannot be zero!")
+        self._lowerbound = lowerbound
+        self._upperbound = upperbound
         self._step = step
 
     @property
-    def index(self) -> str:
+    def index(self) -> VariableExpression:
         return self._index
 
     @property
-    def lb(self) -> int or str:
-        return self._lb
+    def lowerbound(self) -> Expression:
+        return self._lowerbound
 
     @property
-    def ub(self) -> int or str:
-        return self._ub
+    def upperbound(self) -> Expression:
+        return self._upperbound
 
     @property
-    def step(self) -> int or str:
+    def step(self) -> Expression:
         return self._step
 
+    def is_plain(self) -> bool:
+        return self.index.is_simple() and \
+            isinstance(self.lowerbound, ConstantExpression) and \
+            isinstance(self.upperbound, SingleExpression) and \
+            (True if not isinstance(self.upperbound, VariableExpression)
+             else self.upperbound.is_simple()) and \
+            isinstance(self.step, ConstantExpression) and \
+            self.step.value == 1
+
     def stringify_head(self) -> str:
-        return f"FOR {self.index} = {self.lb}...{self.ub}{f' step {self.step}' if self.step != 1 else ''}"
+        head = f"FOR {self.index} = {self.lowerbound}...{self.upperbound}"
+        step = "" if isinstance(self.step, ConstantExpression) or self.step.value == 1 \
+            else f" step {self.step}"
+        return f"{head}{step}"

@@ -11,7 +11,7 @@ from opoly.expressions import (
 class TestExpressions():
 
     def test_constant_expression(self):
-        expr = ConstantExpression("1")
+        expr = ConstantExpression(1)
         assert str(expr) == "1"
 
     def test_simple_variable_expression(self):
@@ -21,11 +21,11 @@ class TestExpressions():
     def test_indexed_variable_expression(self):
         expr = VariableExpression("a", [
             Expression(terms=[VariableExpression("i"),
-                              ConstantExpression("1"),
+                              ConstantExpression(1),
                               ],
                        operators=["+"]),
             Expression(terms=[VariableExpression("j"),
-                              ConstantExpression("1"),
+                              ConstantExpression(1),
                               ],
                        operators=["-"]),
         ])
@@ -46,12 +46,12 @@ class TestExpressions():
     def test_wrong_operator_number(self):
         with pytest.raises(ValueError):
             _ = Expression([
-                ConstantExpression("1"),
-                ConstantExpression("2"),
+                ConstantExpression(1),
+                ConstantExpression(2),
             ], [])
 
     def test_is_sigle_expression(self):
-        expr = ConstantExpression("1")
+        expr = ConstantExpression(1)
         assert expr.is_single()
 
     def test_is_not_sigle_expression(self):
@@ -60,11 +60,11 @@ class TestExpressions():
             VariableExpression("j"),
         ], ["+"])
         assert not expr.is_single()
-    
+
     def test_is_simple_variable_expression(self):
         expr = VariableExpression("a")
         assert expr.is_simple()
-    
+
     def test_is_not_simple_variable_expression(self):
         expr = VariableExpression("a", [VariableExpression("i")])
         assert not expr.is_simple()

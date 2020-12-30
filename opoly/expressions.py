@@ -1,27 +1,29 @@
 from __future__ import annotations
 
+from abc import ABC
+
 
 class Expression():
 
     def __init__(self,
-                 terms: list[Expression],
-                 operators: list[str]
+                 terms: tuple[Expression],
+                 operators: tuple[str]
                  ):
-        if len(terms) == 0:
+        if not len(terms) > 0:
             raise ValueError(
                 "There must be at least one term in the expression!")
         self._terms = terms
-        if len(terms) - 1 != len(operators):
+        if not len(terms) - 1 == len(operators):
             raise ValueError(
                 "Number of operators must be the number of terms minus one!")
         self._operators = operators
 
     @property
-    def terms(self) -> list[Expression]:
+    def terms(self) -> tuple[Expression]:
         return self._terms
 
     @property
-    def operators(self) -> list[str]:
+    def operators(self) -> tuple[str]:
         return self._operators
 
     def is_single(self) -> bool:
@@ -43,25 +45,31 @@ class GroupingExpression(Expression):
         return f"({super().stringify()})"
 
 
-class ConstantExpression(Expression):
+class SingleExpression(Expression, ABC):
 
-    def __init__(self, value: str):
-        super().__init__([self], [])
+    def __init__(self):
+        super().__init__((self,), ())
+
+
+class ConstantExpression(SingleExpression):
+
+    def __init__(self, value: int or float):
+        super().__init__()
         self._value = value
 
     @property
-    def value(self) -> str:
+    def value(self) -> int or float:
         return self._value
 
     def stringify(self) -> str:
-        return self.value
+        return str(self.value)
 
 
-class VariableExpression(Expression):
+class VariableExpression(SingleExpression):
 
     # TODO fix with Optional
-    def __init__(self, name: str, indexes: list[Expression] = []):
-        super().__init__([self], [])
+    def __init__(self, name: str, indexes: tuple[Expression] = ()):
+        super().__init__()
         self._name = name
         self._indexes = indexes
 
@@ -70,9 +78,9 @@ class VariableExpression(Expression):
         return self._name
 
     @property
-    def indexes(self) -> list[str]:
+    def indexes(self) -> tuple[str]:
         return self._indexes
-    
+
     def is_simple(self) -> bool:
         return len(self.indexes) == 0
 
