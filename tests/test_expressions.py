@@ -53,10 +53,18 @@ class TestExpressions():
     def test_is_sigle_expression(self):
         expr = ConstantExpression("1")
         assert expr.is_single()
-    
+
     def test_is_not_sigle_expression(self):
         expr = Expression([
-                VariableExpression("i"),
-                VariableExpression("j"),
-            ], ["+"])
+            VariableExpression("i"),
+            VariableExpression("j"),
+        ], ["+"])
         assert not expr.is_single()
+    
+    def test_is_simple_variable_expression(self):
+        expr = VariableExpression("a")
+        assert expr.is_simple()
+    
+    def test_is_not_simple_variable_expression(self):
+        expr = VariableExpression("a", [VariableExpression("i")])
+        assert not expr.is_simple()

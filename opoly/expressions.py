@@ -42,18 +42,20 @@ class GroupingExpression(Expression):
     def stringify(self) -> str:
         return f"({super().stringify()})"
 
+
 class ConstantExpression(Expression):
 
     def __init__(self, value: str):
         super().__init__([self], [])
         self._value = value
-    
+
     @property
     def value(self) -> str:
         return self._value
-    
+
     def stringify(self) -> str:
         return self.value
+
 
 class VariableExpression(Expression):
 
@@ -70,6 +72,9 @@ class VariableExpression(Expression):
     @property
     def indexes(self) -> list[str]:
         return self._indexes
+    
+    def is_simple(self) -> bool:
+        return len(self.indexes) == 0
 
     def stringify(self) -> str:
         return f"{self.name}{''.join([f'[{i}]' for i in self.indexes])}"

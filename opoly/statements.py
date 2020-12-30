@@ -3,6 +3,7 @@ from enum import auto, Enum
 
 from opoly.expressions import Expression, VariableExpression
 
+
 class StatementType(Enum):
     FOR_LOOP = auto()
     ASSIGNMENT = auto()
