@@ -24,7 +24,7 @@ class TestAssignmentStatement():
             left_term=VariableExpression("a"),
             right_term=ConstantExpression(1)
         )
-        assert stmt.stm_type == StatementType.ASSIGNMENT
+        assert stmt.stype == StatementType.ASSIGNMENT
         assert str(stmt) == "a = 1"
 
     def test_complex_assigment(self):

@@ -11,12 +11,12 @@ class StatementType(Enum):
 
 class Statement(ABC):
 
-    def __init__(self, stm_type: StatementType):
-        self._stm_type = stm_type
+    def __init__(self, stype: StatementType):
+        self._stype = stype
 
     @property
-    def stm_type(self) -> StatementType:
-        return self._stm_type
+    def stype(self) -> StatementType:
+        return self._stype
 
     @abstractmethod
     def stringify(self) -> str:
@@ -46,8 +46,8 @@ class AssigmentStatement(Statement):
 
 class BlockStatement(Statement, ABC):
 
-    def __init__(self, stm_type: StatementType, body: tuple[Statement]):
-        super().__init__(stm_type)
+    def __init__(self, stype: StatementType, body: tuple[Statement]):
+        super().__init__(stype)
         if not len(body) > 0:
             raise ValueError("Block statement body cannot be empty!")
         self._body = body
