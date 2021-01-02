@@ -8,11 +8,11 @@ class TestSimpleVariableOccurrence():
             name="a",
             vtype=VariableOccurrenceType.GENERATION,
             indexes=(
-                ("i", 1),
+                ("i", 0),
                 ("j", -1)
             )
         )
-        assert str(occ) == "[GEN] VAR a[i+1][j-1]"
+        assert str(occ) == "[GEN] VAR a[i+0][j-1]"
 
     def test_indexes_names(self):
         occ = SimpleVariableOccurrence(
