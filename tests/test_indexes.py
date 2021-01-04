@@ -6,7 +6,7 @@ from opoly.indexes import (
     IndexSet
 )
 
-class TestVariableDescriptor():
+class TestIndexDescriptor():
 
     def test_constant(self):
         desc = IndexDescriptor(
@@ -47,7 +47,7 @@ class TestVariableDescriptor():
             )
 
 
-class TestVariableSet():
+class TestIndexSet():
 
     def test_simple(self):
         vset = IndexSet(
