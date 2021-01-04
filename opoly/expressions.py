@@ -86,3 +86,22 @@ class VariableExpression(SingleExpression):
 
     def stringify(self) -> str:
         return f"{self.name}{''.join([f'[{i}]' for i in self.indexes])}"
+
+
+class FunctionExpression(SingleExpression):
+
+    def __init__(self, name: str, args: tuple[Expression] = ()):
+        super().__init__()
+        self._name = name
+        self._args = args
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def args(self) -> tuple[Expression]:
+        return self._args
+
+    def stringify(self) -> str:
+        return f"{self.name}({','.join([str(t) for t in self.args])})"

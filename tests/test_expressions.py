@@ -4,7 +4,8 @@ from opoly.expressions import (
     Expression,
     GroupingExpression,
     ConstantExpression,
-    VariableExpression
+    VariableExpression,
+    FunctionExpression
 )
 
 
@@ -38,6 +39,14 @@ class TestExpressions():
             VariableExpression("c"),
         ], operators=["+", "-"])
         assert str(expr) == "(a + b - c)"
+    
+    def test_function_expression(self):
+        expr = FunctionExpression("max", (
+            VariableExpression("i"),
+            VariableExpression("j")
+        ))
+        assert expr.name == "max"
+        assert str(expr) == "max(i,j)"
 
     def test_empty_expression(self):
         with pytest.raises(ValueError):
