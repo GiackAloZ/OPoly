@@ -59,6 +59,24 @@ class TestIndexSet():
         assert vset.converted_values == (1, -1)
         assert str(vset) == "(1,-1)"
         assert repr(vset) == "(1,-1)"
+        assert list([str(s) for s in vset.extract_positives()]) == [
+            "(1,-1)"
+        ]
+    
+    def test_any(self):
+        vset = IndexSet(
+            descriptors=(
+                IndexDescriptor(IndexDescriptorType.ANY),
+                IndexDescriptor(IndexDescriptorType.CONSTANT, 1)
+            )
+        )
+        assert vset.converted_values == (1, 1)
+        assert str(vset) == "(*,1)"
+        assert repr(vset) == "(1,1)"
+        assert list([str(s) for s in vset.extract_positives()]) == [
+            "(0,1)",
+            "(+,1)"
+        ]
 
     def test_complex(self):
         vset = IndexSet(
@@ -72,6 +90,77 @@ class TestIndexSet():
         assert vset.converted_values == (1, 1, 1, -1)
         assert str(vset) == "(*,1,+,-1)"
         assert repr(vset) == "(1,1,1,-1)"
+        assert list([str(s) for s in vset.extract_positives()]) == [
+            "(0,1,+,-1)",
+            "(+,1,+,-1)"
+        ]
+    
+    def test_successive_any_alone(self):
+        vset = IndexSet(
+            descriptors=(
+                IndexDescriptor(IndexDescriptorType.ANY),
+                IndexDescriptor(IndexDescriptorType.ANY)
+            )
+        )
+        assert vset.converted_values == (1, 1)
+        assert str(vset) == "(*,*)"
+        assert repr(vset) == "(1,1)"
+        assert list([str(s) for s in vset.extract_positives()]) == [
+            "(0,+)",
+            "(+,0)",
+            "(+,+)"
+        ]
+    
+    def test_successive_any_with_positive_constant(self):
+        vset = IndexSet(
+            descriptors=(
+                IndexDescriptor(IndexDescriptorType.ANY),
+                IndexDescriptor(IndexDescriptorType.ANY),
+                IndexDescriptor(IndexDescriptorType.CONSTANT, 1),
+            )
+        )
+        assert vset.converted_values == (1, 1, 1)
+        assert str(vset) == "(*,*,1)"
+        assert repr(vset) == "(1,1,1)"
+        assert list([str(s) for s in vset.extract_positives()]) == [
+            "(0,0,1)",
+            "(0,+,1)",
+            "(+,0,1)",
+            "(+,+,1)"
+        ]
+    
+    def test_successive_any_with_negative_constant(self):
+        vset = IndexSet(
+            descriptors=(
+                IndexDescriptor(IndexDescriptorType.ANY),
+                IndexDescriptor(IndexDescriptorType.ANY),
+                IndexDescriptor(IndexDescriptorType.CONSTANT, -1),
+            )
+        )
+        assert vset.converted_values == (1, 1, -1)
+        assert str(vset) == "(*,*,-1)"
+        assert repr(vset) == "(1,1,-1)"
+        assert list([str(s) for s in vset.extract_positives()]) == [
+            "(0,+,-1)",
+            "(+,0,-1)",
+            "(+,+,-1)"
+        ]
+    
+    def test_multiple_any(self):
+        vset = IndexSet(
+            descriptors=(
+                IndexDescriptor(IndexDescriptorType.ANY),
+                IndexDescriptor(IndexDescriptorType.CONSTANT, -1),
+                IndexDescriptor(IndexDescriptorType.ANY),
+            )
+        )
+        assert vset.converted_values == (1, -1, 1)
+        assert str(vset) == "(*,-1,*)"
+        assert repr(vset) == "(1,-1,1)"
+        assert list([str(s) for s in vset.extract_positives()]) == [
+            "(+,-1,0)",
+            "(+,-1,+)"
+        ]
 
     def test_positive(self):
         vset = IndexSet(
