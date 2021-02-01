@@ -105,3 +105,15 @@ class FunctionExpression(SingleExpression):
 
     def stringify(self) -> str:
         return f"{self.name}({','.join([str(t) for t in self.args])})"
+
+def extract_variable_expressions(expr: Expression) -> tuple[VariableExpression]:
+    variable_expressions = []
+    for subexpr in expr.terms:
+        if isinstance(subexpr, VariableExpression):
+            variable_expressions.append(subexpr)
+        if isinstance(subexpr, FunctionExpression):
+            for arg in subexpr.args:
+                variable_expressions.extend(extract_variable_expressions(arg))
+        elif not isinstance(subexpr, SingleExpression):
+            variable_expressions.extend(extract_variable_expressions(subexpr))
+    return tuple(variable_expressions)
