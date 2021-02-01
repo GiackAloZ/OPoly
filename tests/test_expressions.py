@@ -40,7 +40,7 @@ class TestExpressions():
             VariableExpression("c"),
         ], operators=["+", "-"])
         assert str(expr) == "(a + b - c)"
-    
+
     def test_function_expression(self):
         expr = FunctionExpression("max", (
             VariableExpression("i"),
@@ -78,7 +78,7 @@ class TestExpressions():
     def test_is_not_simple_variable_expression(self):
         expr = VariableExpression("a", [VariableExpression("i")])
         assert not expr.is_simple()
-    
+
     def test_simple_extract_variable_expressions(self):
         expr = GroupingExpression(terms=[
             VariableExpression("a"),
@@ -89,7 +89,7 @@ class TestExpressions():
         assert list(str(e) for e in extract_variable_expressions(expr)) == [
             "a", "b", "c"
         ]
-    
+
     def test_extract_variable_expression_with_function(self):
         expr = FunctionExpression("max", (
             VariableExpression("i"),
@@ -98,7 +98,7 @@ class TestExpressions():
         assert list(str(e) for e in extract_variable_expressions(expr)) == [
             "i", "j"
         ]
-    
+
     def test_complex_extract_variable_expressions(self):
         expr = Expression(
             terms=[

@@ -6,6 +6,7 @@ from opoly.indexes import (
     IndexSet
 )
 
+
 class TestIndexDescriptor():
 
     def test_constant(self):
@@ -62,7 +63,7 @@ class TestIndexSet():
         assert list([str(s) for s in vset.extract_positives()]) == [
             "(1,-1)"
         ]
-    
+
     def test_any(self):
         vset = IndexSet(
             descriptors=(
@@ -94,7 +95,7 @@ class TestIndexSet():
             "(0,1,+,-1)",
             "(+,1,+,-1)"
         ]
-    
+
     def test_successive_any_alone(self):
         vset = IndexSet(
             descriptors=(
@@ -110,7 +111,7 @@ class TestIndexSet():
             "(+,0)",
             "(+,+)"
         ]
-    
+
     def test_successive_any_with_positive_constant(self):
         vset = IndexSet(
             descriptors=(
@@ -128,7 +129,7 @@ class TestIndexSet():
             "(+,0,1)",
             "(+,+,1)"
         ]
-    
+
     def test_successive_any_with_negative_constant(self):
         vset = IndexSet(
             descriptors=(
@@ -145,7 +146,7 @@ class TestIndexSet():
             "(+,0,-1)",
             "(+,+,-1)"
         ]
-    
+
     def test_multiple_any(self):
         vset = IndexSet(
             descriptors=(

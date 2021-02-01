@@ -106,6 +106,7 @@ class FunctionExpression(SingleExpression):
     def stringify(self) -> str:
         return f"{self.name}({','.join([str(t) for t in self.args])})"
 
+
 def extract_variable_expressions(expr: Expression) -> tuple[VariableExpression]:
     variable_expressions = []
     for subexpr in expr.terms:

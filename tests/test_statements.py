@@ -43,7 +43,7 @@ class TestAssignmentStatement():
             ], ["+"])
         )
         assert str(stmt) == "a[i][j] = a[i + 1][j + 1] + a[i - 1][j - 1]"
-    
+
     def test_simple_divide_assignment(self):
         stmt = AssigmentStatement(
             left_term=VariableExpression("a",
@@ -59,45 +59,49 @@ class TestAssignmentStatement():
         )
         gens, uses = divide_assignments([stmt])
         assert list(str(g) for g in gens) == ["a[i][j]"]
-        assert list(str(u) for u in uses) == ["a[i + 1][j + 1]", "a[i - 1][j - 1]"]
+        assert list(str(u) for u in uses) == [
+            "a[i + 1][j + 1]", "a[i - 1][j - 1]"]
         gens, uses = prune_expressions(gens, uses)
         assert list(str(g) for g in gens) == ["a[i][j]"]
-        assert list(str(u) for u in uses) == ["a[i + 1][j + 1]", "a[i - 1][j - 1]"]
-    
+        assert list(str(u) for u in uses) == [
+            "a[i + 1][j + 1]", "a[i - 1][j - 1]"]
+
     def test_complex_divide_and_prune_assignments(self):
         stmt1 = AssigmentStatement(
             left_term=VariableExpression("a",
                                          [VariableExpression("i"), VariableExpression("j")]),
             right_term=Expression([
                 GroupingExpression([
-                        VariableExpression("b",
-                                    [Expression([VariableExpression("i"), ConstantExpression(1)], ["+"]),
+                    VariableExpression("b",
+                                       [Expression([VariableExpression("i"), ConstantExpression(1)], ["+"]),
                                         Expression([VariableExpression("j"), ConstantExpression(1)], ["+"])]),
-                        VariableExpression("b",
-                                    [Expression([VariableExpression("i"), ConstantExpression(1)], ["-"]),
+                    VariableExpression("b",
+                                       [Expression([VariableExpression("i"), ConstantExpression(1)], ["-"]),
                                         Expression([VariableExpression("j"), ConstantExpression(1)], ["-"])])
-                    ], ["+"]),
+                ], ["+"]),
                 ConstantExpression(2.0)
             ], ["/"])
         )
-        assert str(stmt1) == "a[i][j] = (b[i + 1][j + 1] + b[i - 1][j - 1]) / 2.0"
+        assert str(
+            stmt1) == "a[i][j] = (b[i + 1][j + 1] + b[i - 1][j - 1]) / 2.0"
 
         stmt2 = AssigmentStatement(
             left_term=VariableExpression("b",
                                          [VariableExpression("i"), VariableExpression("j")]),
             right_term=Expression([
                 GroupingExpression([
-                        VariableExpression("c",
-                                    [Expression([VariableExpression("i"), ConstantExpression(1)], ["+"]),
+                    VariableExpression("c",
+                                       [Expression([VariableExpression("i"), ConstantExpression(1)], ["+"]),
                                         Expression([VariableExpression("j"), ConstantExpression(1)], ["+"])]),
-                        VariableExpression("c",
-                                    [Expression([VariableExpression("i"), ConstantExpression(1)], ["-"]),
+                    VariableExpression("c",
+                                       [Expression([VariableExpression("i"), ConstantExpression(1)], ["-"]),
                                         Expression([VariableExpression("j"), ConstantExpression(1)], ["-"])])
-                    ], ["+"]),
+                ], ["+"]),
                 ConstantExpression(2.0)
             ], ["/"])
         )
-        assert str(stmt2) == "b[i][j] = (c[i + 1][j + 1] + c[i - 1][j - 1]) / 2.0"
+        assert str(
+            stmt2) == "b[i][j] = (c[i + 1][j + 1] + c[i - 1][j - 1]) / 2.0"
 
         gens, uses = divide_assignments([stmt1, stmt2])
         assert list(str(g) for g in gens) == [
@@ -109,24 +113,28 @@ class TestAssignmentStatement():
         ]
         pruned_gens, pruned_uses = prune_expressions(gens, uses)
         assert list(str(g) for g in pruned_gens) == ["b[i][j]"]
-        assert list(str(u) for u in pruned_uses) == ["b[i + 1][j + 1]", "b[i - 1][j - 1]"]
+        assert list(str(u) for u in pruned_uses) == [
+            "b[i + 1][j + 1]", "b[i - 1][j - 1]"
+        ]
 
         stmt3 = AssigmentStatement(
             left_term=VariableExpression("a",
-                                         [Expression([VariableExpression("i"), ConstantExpression(1)], ["+"]), VariableExpression("j")]),
+                                         [Expression([VariableExpression("i"), ConstantExpression(1)], ["+"]),
+                                          VariableExpression("j")]),
             right_term=Expression([
                 GroupingExpression([
-                        VariableExpression("c",
-                                    [Expression([VariableExpression("i"), ConstantExpression(1)], ["+"]),
+                    VariableExpression("c",
+                                       [Expression([VariableExpression("i"), ConstantExpression(1)], ["+"]),
                                         Expression([VariableExpression("j"), ConstantExpression(1)], ["+"])]),
-                        VariableExpression("c",
-                                    [Expression([VariableExpression("i"), ConstantExpression(1)], ["-"]),
+                    VariableExpression("c",
+                                       [Expression([VariableExpression("i"), ConstantExpression(1)], ["-"]),
                                         Expression([VariableExpression("j"), ConstantExpression(1)], ["-"])])
-                    ], ["+"]),
+                ], ["+"]),
                 ConstantExpression(2.0)
             ], ["/"])
         )
-        assert str(stmt3) == "a[i + 1][j] = (c[i + 1][j + 1] + c[i - 1][j - 1]) / 2.0"
+        assert str(
+            stmt3) == "a[i + 1][j] = (c[i + 1][j + 1] + c[i - 1][j - 1]) / 2.0"
 
         gens, uses = divide_assignments([stmt1, stmt2, stmt3])
         assert list(str(g) for g in gens) == [
@@ -138,8 +146,12 @@ class TestAssignmentStatement():
             "c[i + 1][j + 1]", "c[i - 1][j - 1]"
         ]
         pruned_gens, pruned_uses = prune_expressions(gens, uses)
-        assert list(str(g) for g in pruned_gens) == ["a[i][j]", "b[i][j]", "a[i + 1][j]"]
-        assert list(str(u) for u in pruned_uses) == ["b[i + 1][j + 1]", "b[i - 1][j - 1]"]
+        assert list(str(g) for g in pruned_gens) == [
+            "a[i][j]", "b[i][j]", "a[i + 1][j]"
+        ]
+        assert list(str(u) for u in pruned_uses) == [
+            "b[i + 1][j + 1]", "b[i - 1][j - 1]"
+        ]
 
 
 class TestForLoopStatement():

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional
 from enum import Enum
 
+
 class IndexDescriptorType(Enum):
     ANY = "*"
     POSITIVE = "+"
@@ -67,8 +68,10 @@ class IndexSet():
                 new_sets = []
                 for exp_set in expanded_sets:
                     exp_descs = list(exp_set.descriptors)
-                    zero_descs = exp_descs[:i] + [IndexDescriptor(IndexDescriptorType.CONSTANT, 0)] + exp_descs[i+1:]
-                    plus_descs = exp_descs[:i] + [IndexDescriptor(IndexDescriptorType.POSITIVE)] + exp_descs[i+1:]
+                    zero_descs = exp_descs[:i] + [IndexDescriptor(
+                        IndexDescriptorType.CONSTANT, 0)] + exp_descs[i+1:]
+                    plus_descs = exp_descs[:i] + [IndexDescriptor(
+                        IndexDescriptorType.POSITIVE)] + exp_descs[i+1:]
                     zero_set = IndexSet(zero_descs)
                     plus_set = IndexSet(plus_descs)
                     if zero_set.is_lexico_positive():
@@ -77,7 +80,6 @@ class IndexSet():
                 expanded_sets = new_sets
         # Filter out non-positive sets
         return list(filter(lambda s: s.is_lexico_positive(), expanded_sets))
-
 
     def __str__(self):
         return f"({','.join([str(descriptor) for descriptor in self.descriptors])})"
