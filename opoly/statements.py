@@ -1,7 +1,15 @@
 from abc import ABC, abstractmethod
 from enum import auto, Enum
 
-from opoly.expressions import Expression, SingleExpression, VariableExpression, ConstantExpression
+from collections import Counter
+
+from opoly.expressions import (
+    Expression,
+    SingleExpression,
+    VariableExpression,
+    ConstantExpression,
+    extract_variable_expressions
+)
 
 
 class StatementType(Enum):
@@ -48,7 +56,7 @@ class BlockStatement(Statement, ABC):
 
     def __init__(self, stype: StatementType, body: tuple[Statement]):
         super().__init__(stype)
-        if not len(body) > 0:
+        if len(body) == 0:
             raise ValueError("Block statement body cannot be empty!")
         self._body = body
 
@@ -126,3 +134,26 @@ def check_plain_nested_loop(loop: ForLoopStatement) -> bool:
         if isinstance(stmt, ForLoopStatement) and not check_plain_nested_loop(stmt):
             return False
     return loop.is_plain()
+
+def divide_assignments(
+        assignments: tuple[AssigmentStatement]
+    ) -> (tuple[VariableExpression], tuple[VariableExpression]):
+    generations = []
+    uses = []
+    for ass in assignments:
+        generations.append(ass.left_term)
+        uses.extend(extract_variable_expressions(ass.right_term))
+    return (tuple(generations), tuple(uses))
+
+def prune_expressions(
+        generations: tuple[VariableExpression], uses: tuple[VariableExpression]
+    ) -> (tuple[VariableExpression], tuple[VariableExpression]):
+    gen_names = set(gen.name for gen in generations)
+    use_names = set(use.name for use in uses)
+    both_names = gen_names & use_names
+
+    count_names = Counter(var.name for var in generations + uses)
+
+    generations = filter(lambda g: g.name in gen_names and count_names[g.name] > 1, generations)
+    uses = filter(lambda u: u.name in both_names, uses)
+    return (tuple(generations), tuple(uses))
