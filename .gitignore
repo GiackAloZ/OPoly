@@ -1,6 +1,7 @@
 .vscode
 .pytest_cache
 .coverage
+.ipynb_checkpoints
 
 __pycache__
 htmlcov
