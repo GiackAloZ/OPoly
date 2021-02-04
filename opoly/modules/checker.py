@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from opoly.statements import ForLoopStatement, AssignmentStatement, divide_assignments, prune_expressions
+from opoly.statements import Statement, ForLoopStatement, AssignmentStatement, divide_assignments, prune_expressions
 from opoly.expressions import (
     Expression,
     ConstantExpression,
@@ -26,6 +26,11 @@ def is_perfectly_nested_loop(loop: ForLoopStatement) -> bool:
     if isinstance(loop.body[0], ForLoopStatement):
         return is_perfectly_nested_loop(loop.body[0])
     return True
+
+def get_inner_loop_statments(loop: ForLoopStatement) -> tuple[Statement]:
+    if len(loop.body) == 1 and isinstance(loop.body[0], ForLoopStatement):
+        return get_inner_loop_statments(loop.body[0])
+    return loop.body
 
 def is_plain_loop(loop: ForLoopStatement) -> bool:
     return (loop.lowerbound.is_constant() and
@@ -66,7 +71,7 @@ def extract_loop_indexes(loop: ForLoopStatement) -> tuple[VariableExpression]:
         inner_indexes = []
         if isinstance(loop.body[0], ForLoopStatement):
             inner_indexes = extract_loop_indexes(loop.body[0])
-        return tuple(list(inner_indexes) + [loop.index])
+        return tuple([loop.index] + list(inner_indexes))
 
 def has_same_simple_indexes(var1: VariableExpression, var2: VariableExpression) -> bool:
     var1_indexes = get_indexed_variable_simple_indexes(var1)
@@ -97,9 +102,13 @@ class LamportForLoopChecker(ForLoopChecker):
         index_names = tuple([i.name for i in indexes]) #pylint: disable=no-member
         if not len(set(index_names)) == len(index_names):
             return False, "Not all index names in loop are distinct!"
-        if not all(map(lambda stmt: isinstance(stmt, AssignmentStatement), loop.body)):
+        inner_statements = get_inner_loop_statments(loop)
+        if not all(map(lambda stmt: isinstance(stmt, AssignmentStatement), inner_statements)):
             return False, "Not all statements in loop body are assignments!"
-        generations, uses = prune_expressions(*divide_assignments(loop.body))
+        lefts, rights = divide_assignments(inner_statements)
+        if not all(map(lambda l: l.is_variable(), lefts)):
+            return False, "Not all left sides of statements in loop body are variable expressions!"
+        generations, uses = prune_expressions(lefts, rights)
         if any(map(lambda gen: gen.is_simple(), generations)):
             return False, "All variable generations must be non-simple!"
         # Filter non-simple uses
@@ -118,7 +127,7 @@ class LamportForLoopChecker(ForLoopChecker):
                     return False, f"Variable expression ({str(var1)}) has an index not present in loop indexes!"
                 if not len(set(var1_index_names)) == len(var1_index_names):
                     return False, f"Variable expression ({str(var1)}) indexes are not unique!"
-                if not all(map(lambda iname: iname is var1_index_names, index_names[1:])):
+                if not all(map(lambda iname: iname in var1_index_names, index_names[1:])):
                     return False, f"Variable expression ({str(var1)}) has a missing index which is not ({index_names[0]})!"
 
                 for var2 in same_name_vars:
