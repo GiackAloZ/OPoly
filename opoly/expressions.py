@@ -118,3 +118,12 @@ def extract_variable_expressions(expr: Expression) -> tuple[VariableExpression]:
         elif not isinstance(subexpr, SingleExpression):
             variable_expressions.extend(extract_variable_expressions(subexpr))
     return tuple(variable_expressions)
+
+def divide_variable_expressions_by_name(
+    expressions: tuple[VariableExpression]
+) -> dict[str, list[Expression]]:
+    expressions_dict = {}
+    for expr in expressions:
+        exprs = expressions_dict.setdefault(expr.name, [])
+        exprs.append(expr)
+    return expressions_dict

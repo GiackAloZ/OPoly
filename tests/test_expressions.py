@@ -6,7 +6,8 @@ from opoly.expressions import (
     ConstantExpression,
     VariableExpression,
     FunctionExpression,
-    extract_variable_expressions
+    extract_variable_expressions,
+    divide_variable_expressions_by_name
 )
 
 
@@ -114,3 +115,17 @@ class TestExpressions():
         assert list(str(e) for e in extract_variable_expressions(expr)) == [
             "a", "b", "c"
         ]
+    
+    def test_divide_variable_expressions(self):
+        expressions = [
+            VariableExpression("a"),
+            VariableExpression("b"),
+            VariableExpression("a", [
+                VariableExpression("i"),
+                VariableExpression("j")
+            ])
+        ]
+        expr_dict = divide_variable_expressions_by_name(expressions)
+        assert list([str(e) for e in expr_dict["a"]]) == ["a", "a[i][j]"]
+        assert list([str(e) for e in expr_dict["b"]]) == ["b"]
+        assert "c" not in expr_dict
