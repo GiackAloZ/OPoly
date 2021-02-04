@@ -10,10 +10,8 @@ from opoly.expressions import (
 
 from opoly.statements import (
     StatementType,
-    AssigmentStatement,
+    AssignmentStatement,
     ForLoopStatement,
-    check_perfectly_nested_loop,
-    check_plain_nested_loop,
     divide_assignments,
     prune_expressions
 )
@@ -22,7 +20,7 @@ from opoly.statements import (
 class TestAssignmentStatement():
 
     def test_simple_assignment(self):
-        stmt = AssigmentStatement(
+        stmt = AssignmentStatement(
             left_term=VariableExpression("a"),
             right_term=ConstantExpression(1)
         )
@@ -30,7 +28,7 @@ class TestAssignmentStatement():
         assert str(stmt) == "a = 1"
 
     def test_complex_assigment(self):
-        stmt = AssigmentStatement(
+        stmt = AssignmentStatement(
             left_term=VariableExpression("a",
                                          [VariableExpression("i"), VariableExpression("j")]),
             right_term=Expression([
@@ -45,7 +43,7 @@ class TestAssignmentStatement():
         assert str(stmt) == "a[i][j] = a[i + 1][j + 1] + a[i - 1][j - 1]"
 
     def test_simple_divide_assignment(self):
-        stmt = AssigmentStatement(
+        stmt = AssignmentStatement(
             left_term=VariableExpression("a",
                                          [VariableExpression("i"), VariableExpression("j")]),
             right_term=Expression([
@@ -67,7 +65,7 @@ class TestAssignmentStatement():
             "a[i + 1][j + 1]", "a[i - 1][j - 1]"]
 
     def test_complex_divide_and_prune_assignments(self):
-        stmt1 = AssigmentStatement(
+        stmt1 = AssignmentStatement(
             left_term=VariableExpression("a",
                                          [VariableExpression("i"), VariableExpression("j")]),
             right_term=Expression([
@@ -85,7 +83,7 @@ class TestAssignmentStatement():
         assert str(
             stmt1) == "a[i][j] = (b[i + 1][j + 1] + b[i - 1][j - 1]) / 2.0"
 
-        stmt2 = AssigmentStatement(
+        stmt2 = AssignmentStatement(
             left_term=VariableExpression("b",
                                          [VariableExpression("i"), VariableExpression("j")]),
             right_term=Expression([
@@ -117,7 +115,7 @@ class TestAssignmentStatement():
             "b[i + 1][j + 1]", "b[i - 1][j - 1]"
         ]
 
-        stmt3 = AssigmentStatement(
+        stmt3 = AssignmentStatement(
             left_term=VariableExpression("a",
                                          [Expression([VariableExpression("i"), ConstantExpression(1)], ["+"]),
                                           VariableExpression("j")]),
@@ -158,19 +156,18 @@ class TestForLoopStatement():
 
     def test_plain_loop(self):
         loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("i")]),
-                                     VariableExpression("b", [VariableExpression("i")]))],
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      VariableExpression("b", [VariableExpression("i")]))],
             index=VariableExpression("i"),
             lowerbound=ConstantExpression(1),
             upperbound=VariableExpression("N")
         )
-        assert loop.is_plain()
         assert str(loop) == "FOR i = 1...N\na[i] = b[i]"
 
     def test_nested_loop(self):
         inner_loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("j")]),
-                                     VariableExpression("b", [VariableExpression("j")]))],
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("j")]),
+                                      VariableExpression("b", [VariableExpression("j")]))],
             index=VariableExpression("j"),
             lowerbound=ConstantExpression(1),
             upperbound=VariableExpression("M")
@@ -182,60 +179,7 @@ class TestForLoopStatement():
             lowerbound=ConstantExpression(1),
             upperbound=VariableExpression("N")
         )
-
         assert str(outer_loop) == "FOR i = 1...N\nFOR j = 1...M\na[j] = b[j]"
-
-    def test_not_simple_index(self):
-        loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("i")]),
-                                     VariableExpression("b", [VariableExpression("i")]))],
-            index=VariableExpression("a", [VariableExpression("i")]),
-            lowerbound=VariableExpression("i"),
-            upperbound=VariableExpression("M")
-        )
-        assert not loop.is_plain()
-
-    def test_not_constant_lowerbound(self):
-        loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("i")]),
-                                     VariableExpression("b", [VariableExpression("i")]))],
-            index=VariableExpression("i"),
-            lowerbound=VariableExpression("j"),
-            upperbound=VariableExpression("N")
-        )
-        assert not loop.is_plain()
-
-    def test_not_simple_upperbound(self):
-        loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("i")]),
-                                     VariableExpression("b", [VariableExpression("i")]))],
-            index=VariableExpression("i"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("a", [VariableExpression("i")])
-        )
-        assert not loop.is_plain()
-
-    def test_not_constant_step(self):
-        loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("i")]),
-                                     VariableExpression("b", [VariableExpression("i")]))],
-            index=VariableExpression("i"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("N"),
-            step=VariableExpression("j")
-        )
-        assert not loop.is_plain()
-
-    def test_not_singular_increment_step(self):
-        loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("i")]),
-                                     VariableExpression("b", [VariableExpression("i")]))],
-            index=VariableExpression("i"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("N"),
-            step=ConstantExpression(2)
-        )
-        assert not loop.is_plain()
 
     def test_empty_loop(self):
         with pytest.raises(ValueError):
@@ -244,77 +188,3 @@ class TestForLoopStatement():
                                  lowerbound=ConstantExpression(1),
                                  upperbound=ConstantExpression(10)
                                  )
-
-    def test_perfectly_nested_loop(self):
-        inner_loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("j")]),
-                                     VariableExpression("b", [VariableExpression("j")]))],
-            index=VariableExpression("j"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("M")
-        )
-
-        outer_loop = ForLoopStatement(
-            body=[inner_loop],
-            index=VariableExpression("i"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("N")
-        )
-
-        assert check_perfectly_nested_loop(outer_loop)
-
-    def test_not_perfectly_nested_loop(self):
-        inner_loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("j")]),
-                                     VariableExpression("b", [VariableExpression("j")]))],
-            index=VariableExpression("j"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("M")
-        )
-
-        outer_loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("i")]),
-                                     VariableExpression("b", [VariableExpression("i")])),
-                  inner_loop],
-            index=VariableExpression("i"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("N")
-        )
-
-        assert not check_perfectly_nested_loop(outer_loop)
-
-    def test_plain_nested_loop(self):
-        inner_loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("j")]),
-                                     VariableExpression("b", [VariableExpression("j")]))],
-            index=VariableExpression("j"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("M")
-        )
-
-        outer_loop = ForLoopStatement(
-            body=[inner_loop],
-            index=VariableExpression("i"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("N")
-        )
-
-        assert check_plain_nested_loop(outer_loop)
-
-    def test_not_plain_nested_loop(self):
-        inner_loop = ForLoopStatement(
-            body=[AssigmentStatement(VariableExpression("a", [VariableExpression("j")]),
-                                     VariableExpression("b", [VariableExpression("j")]))],
-            index=VariableExpression("j"),
-            lowerbound=VariableExpression("i"),
-            upperbound=VariableExpression("M")
-        )
-
-        outer_loop = ForLoopStatement(
-            body=[inner_loop],
-            index=VariableExpression("i"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("N")
-        )
-
-        assert not check_plain_nested_loop(outer_loop)

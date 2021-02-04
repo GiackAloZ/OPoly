@@ -34,7 +34,7 @@ class Statement(ABC):
         return self.stringify()
 
 
-class AssigmentStatement(Statement):
+class AssignmentStatement(Statement):
     def __init__(self, left_term: VariableExpression, right_term: Expression):
         super().__init__(StatementType.ASSIGNMENT)
         self._left_term = left_term
@@ -105,39 +105,14 @@ class ForLoopStatement(BlockStatement):
     def step(self) -> Expression:
         return self._step
 
-    def is_plain(self) -> bool:
-        return self.index.is_simple() and \
-            isinstance(self.lowerbound, ConstantExpression) and \
-            isinstance(self.upperbound, SingleExpression) and \
-            (True if not isinstance(self.upperbound, VariableExpression)
-             else self.upperbound.is_simple()) and \
-            isinstance(self.step, ConstantExpression) and \
-            self.step.value == 1
-
     def stringify_head(self) -> str:
         head = f"FOR {self.index} = {self.lowerbound}...{self.upperbound}"
         step = "" if isinstance(self.step, ConstantExpression) or self.step.value == 1 \
             else f" step {self.step}"
         return f"{head}{step}"
 
-
-def check_perfectly_nested_loop(loop: ForLoopStatement) -> bool:
-    if len(loop.body) > 1:
-        return not any([isinstance(st, ForLoopStatement) for st in loop.body])
-    if isinstance(loop.body[0], ForLoopStatement):
-        return check_perfectly_nested_loop(loop.body[0])
-    return True
-
-
-def check_plain_nested_loop(loop: ForLoopStatement) -> bool:
-    for stmt in loop.body:
-        if isinstance(stmt, ForLoopStatement) and not check_plain_nested_loop(stmt):
-            return False
-    return loop.is_plain()
-
-
 def divide_assignments(
-    assignments: tuple[AssigmentStatement]
+    assignments: tuple[AssignmentStatement]
 ) -> (tuple[VariableExpression], tuple[VariableExpression]):
     generations = []
     uses = []

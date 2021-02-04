@@ -28,6 +28,12 @@ class Expression():
 
     def is_single(self) -> bool:
         return len(self.terms) == 1
+    
+    def is_constant(self) -> bool:
+        return isinstance(self, ConstantExpression)
+
+    def is_variable(self) -> bool:
+        return isinstance(self, VariableExpression)
 
     def stringify(self) -> str:
         res = str(self.terms[0])
@@ -78,7 +84,7 @@ class VariableExpression(SingleExpression):
         return self._name
 
     @property
-    def indexes(self) -> tuple[str]:
+    def indexes(self) -> tuple[Expression]:
         return self._indexes
 
     def is_simple(self) -> bool:

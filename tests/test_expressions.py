@@ -16,10 +16,12 @@ class TestExpressions():
     def test_constant_expression(self):
         expr = ConstantExpression(1)
         assert str(expr) == "1"
+        assert expr.is_constant()
 
     def test_simple_variable_expression(self):
         expr = VariableExpression("a")
         assert str(expr) == "a"
+        assert expr.is_variable()
 
     def test_indexed_variable_expression(self):
         expr = VariableExpression("a", [
