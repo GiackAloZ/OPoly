@@ -9,6 +9,8 @@ from opoly.expressions import (
     divide_variable_expressions_by_name
 )
 
+
+
 def is_simple_variable_sum_with_positive_constant(expr: Expression) -> bool:
     if (len(expr.operators) == 1 and
         (expr.operators[0] == "+" or expr.operators[0] == "-") and
@@ -76,9 +78,8 @@ def extract_loop_indexes(loop: ForLoopStatement) -> tuple[VariableExpression]:
 def has_same_simple_indexes(var1: VariableExpression, var2: VariableExpression) -> bool:
     var1_indexes = get_indexed_variable_simple_indexes(var1)
     var2_indexes = get_indexed_variable_simple_indexes(var2)
-    if var1_indexes is not None and var2_indexes is not None:
-        return list(idx.name for idx in var1_indexes) == list(idx.name for idx in var1_indexes)
-    return False
+    return var1_indexes is not None and var2_indexes is not None and \
+        list(idx.name for idx in var1_indexes) == list(idx.name for idx in var2_indexes)
 
 class ForLoopChecker(ABC):
 
@@ -103,8 +104,9 @@ class LamportForLoopChecker(ForLoopChecker):
         if not len(set(index_names)) == len(index_names):
             return False, "Not all index names in loop are distinct!"
         inner_statements = get_inner_loop_statments(loop)
-        if not all(map(lambda stmt: isinstance(stmt, AssignmentStatement), inner_statements)):
-            return False, "Not all statements in loop body are assignments!"
+        # TODO add new statement to verify this
+        # if not all(map(lambda stmt: isinstance(stmt, AssignmentStatement), inner_statements)):
+        #     return False, "Not all statements in loop body are assignments!"
         lefts, rights = divide_assignments(inner_statements)
         if not all(map(lambda l: l.is_variable(), lefts)):
             return False, "Not all left sides of statements in loop body are variable expressions!"
@@ -120,8 +122,10 @@ class LamportForLoopChecker(ForLoopChecker):
         for _, same_name_vars in var_names_dict.items():
             for var1 in same_name_vars:
                 var1_indexes = get_indexed_variable_simple_indexes(var1)
-                var1_index_names = tuple([i.name for i in var1_indexes])
                 var1_constants = get_indexed_variable_index_constants(var1)
+                if var1_indexes is None or var1_constants is None:
+                    return False, f"Variable expression ({str(var1)}) has incorrect indexes!"
+                var1_index_names = tuple([i.name for i in var1_indexes])
 
                 if not all(map(lambda i: i.name in index_names, var1_indexes)):
                     return False, f"Variable expression ({str(var1)}) has an index not present in loop indexes!"
@@ -129,12 +133,12 @@ class LamportForLoopChecker(ForLoopChecker):
                     return False, f"Variable expression ({str(var1)}) indexes are not unique!"
                 if not all(map(lambda iname: iname in var1_index_names, index_names[1:])):
                     return False, f"Variable expression ({str(var1)}) has a missing index which is not ({index_names[0]})!"
-
+                if not all(map(lambda con: isinstance(con.value, int), var1_constants)):
+                    return False, f"Variable expression ({str(var1)}) has a non-integer constant in one of the indexes!"
+        
+            for var1 in same_name_vars:
                 for var2 in same_name_vars:
                     if not has_same_simple_indexes(var1, var2):
                         return False, f"Variable expressions ({str(var1)}) and ({str(var2)}) have the same name but different indexes order!"
-
-                if not all(map(lambda con: isinstance(con.value, int), var1_constants)):
-                    return False, f"Variable expression ({str(var1)}) has a non-integer constant in one of the indexes!"
         return (True, None)
 

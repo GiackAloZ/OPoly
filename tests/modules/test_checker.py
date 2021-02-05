@@ -1,4 +1,4 @@
-from opoly.statements import ForLoopStatement, AssignmentStatement
+from opoly.statements import ForLoopStatement, AssignmentStatement, BlockStatement
 from opoly.expressions import VariableExpression, ConstantExpression, Expression, GroupingExpression
 
 from opoly.modules.checker import is_perfectly_nested_loop, is_plain_loop, LamportForLoopChecker
@@ -254,3 +254,298 @@ class TestLamportForLoopChecker():
         assert is_plain_loop(iloop)
         assert is_perfectly_nested_loop(iloop)
         assert LamportForLoopChecker().check(iloop)[0]
+
+    def test_not_simple_indexes(self):
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      VariableExpression("b", [VariableExpression("i")]))],
+            index=VariableExpression("i", [ConstantExpression(0)]),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(loop)
+        assert not res
+        assert error == "Loop indexes are not simple!"
+
+    def test_not_all_distinct_indexes(self):
+        inner_loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      VariableExpression("b", [VariableExpression("i")]))],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("M")
+        )
+        outer_loop = ForLoopStatement(
+            body=[inner_loop],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(outer_loop)
+        assert not res
+        assert error == "Not all index names in loop are distinct!"
+
+    def test_not_all_left_variables(self):
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(ConstantExpression(1),
+                                      VariableExpression("b", [VariableExpression("i")]))],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(loop)
+        assert not res
+        assert error == "Not all left sides of statements in loop body are variable expressions!"
+
+    def test_not_all_non_simple_generations(self):
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a"),
+                                      VariableExpression("a", [VariableExpression("i")]))],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(loop)
+        assert not res
+        assert error == "All variable generations must be non-simple!"
+
+    def test_variable_index_not_present(self):
+        wrong = VariableExpression("a", [VariableExpression("j")])
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      wrong)],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(loop)
+        assert not res
+        assert error == f"Variable expression ({str(wrong)}) has an index not present in loop indexes!"
+
+    def test_not_unique_variable_indexes(self):
+        wrong = VariableExpression(
+            "a", [VariableExpression("j"), VariableExpression("j")])
+        inner_loop = ForLoopStatement(
+            body=[AssignmentStatement(
+                left_term=wrong,
+                right_term=Expression([
+                    GroupingExpression([
+                        VariableExpression("a", [Expression([
+                            VariableExpression("j"), ConstantExpression(1)], "-"), VariableExpression("j")]),
+                        VariableExpression(
+                            "a", [VariableExpression("j"), VariableExpression("j")]),
+                        VariableExpression("a", [Expression([
+                            VariableExpression("j"), ConstantExpression(1)], "+"), VariableExpression("j")])
+                    ], ["+", "+"]),
+                    ConstantExpression(3.0)
+                ], "/")
+            )],
+            index=VariableExpression("j"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression(
+                [VariableExpression("M"), ConstantExpression(1)], ["-"])
+        )
+        outer_loop = ForLoopStatement(
+            body=[inner_loop],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(outer_loop)
+        assert not res
+        assert error == f"Variable expression ({str(wrong)}) indexes are not unique!"
+
+    def test_wrong_missing_index(self):
+        wrong = VariableExpression("a", [VariableExpression("i")])
+        inner_loop = ForLoopStatement(
+            body=[AssignmentStatement(
+                left_term=VariableExpression("a", [VariableExpression("i")]),
+                right_term=Expression([
+                    GroupingExpression([
+                        VariableExpression("a", [Expression([
+                            VariableExpression("i"), ConstantExpression(1)], "-")]),
+                        VariableExpression("a", [VariableExpression("i")]),
+                        VariableExpression("a", [Expression([
+                            VariableExpression("i"), ConstantExpression(1)], "+")])
+                    ], ["+", "+"]),
+                    ConstantExpression(3.0)
+                ], "/")
+            )],
+            index=VariableExpression("j"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression(
+                [VariableExpression("M"), ConstantExpression(1)], ["-"])
+        )
+        outer_loop = ForLoopStatement(
+            body=[inner_loop],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(outer_loop)
+        assert not res
+        assert error == f"Variable expression ({str(wrong)}) has a missing index which is not ({outer_loop.index})!"
+
+    def test_not_integer_constant(self):
+        wrong = VariableExpression(
+            "a", [Expression([VariableExpression("i"), ConstantExpression(1.5)], ["+"])])
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      wrong)],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(loop)
+        assert not res
+        assert error == f"Variable expression ({str(wrong)}) has a non-integer constant in one of the indexes!"
+
+    def test_not_simple_variable_indexes(self):
+        wrong = VariableExpression(
+            "a", [VariableExpression("i", [ConstantExpression(1)])])
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      wrong)],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(loop)
+        assert not res
+        assert error == f"Variable expression ({str(wrong)}) has incorrect indexes!"
+
+    def test_multiple_variable_indexes(self):
+        wrong = VariableExpression(
+            "a", [Expression([VariableExpression("i"), VariableExpression("j")], ["+"])])
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      wrong)],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(loop)
+        assert not res
+        assert error == f"Variable expression ({str(wrong)}) has incorrect indexes!"
+
+    def test_good_inverted_order_index_expression(self):
+        inner_loop = ForLoopStatement(
+            body=[AssignmentStatement(
+                left_term=VariableExpression("a", [VariableExpression("j")]),
+                right_term=Expression([
+                    GroupingExpression([
+                        VariableExpression("a", [Expression([
+                            VariableExpression("j"), ConstantExpression(1)], "-")]),
+                        VariableExpression("a", [VariableExpression("j")]),
+                        VariableExpression("a", [Expression([
+                            ConstantExpression(1), VariableExpression("j")], "+")])
+                    ], ["+", "+"]),
+                    ConstantExpression(3.0)
+                ], "/")
+            )],
+            index=VariableExpression("j"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression(
+                [VariableExpression("M"), ConstantExpression(1)], ["-"])
+        )
+
+        outer_loop = ForLoopStatement(
+            body=[inner_loop],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        assert LamportForLoopChecker().check(outer_loop)[0]
+
+    def test_bad_inverted_order_index_expression(self):
+        wrong = VariableExpression("a", [Expression([
+            ConstantExpression(1), VariableExpression("j")], "-")])
+        inner_loop = ForLoopStatement(
+            body=[AssignmentStatement(
+                left_term=VariableExpression("a", [VariableExpression("j")]),
+                right_term=Expression([
+                    GroupingExpression([
+                        wrong,
+                        VariableExpression("a", [VariableExpression("j")]),
+                        VariableExpression("a", [Expression([
+                            VariableExpression("j"), ConstantExpression(1)], "+")])
+                    ], ["+", "+"]),
+                    ConstantExpression(3.0)
+                ], "/")
+            )],
+            index=VariableExpression("j"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression(
+                [VariableExpression("M"), ConstantExpression(1)], ["-"])
+        )
+
+        outer_loop = ForLoopStatement(
+            body=[inner_loop],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(outer_loop)
+        assert not res
+        assert error == f"Variable expression ({str(wrong)}) has incorrect indexes!"
+
+    def test_not_supported_index_operator(self):
+        wrong = VariableExpression(
+            "a", [Expression([VariableExpression("i"), ConstantExpression(2)], ["/"])])
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      wrong)],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(loop)
+        assert not res
+        assert error == f"Variable expression ({str(wrong)}) has incorrect indexes!"
+
+    def test_different_variable_indexes_order(self):
+        ajk = VariableExpression("a", [
+            VariableExpression("j"),
+            VariableExpression("k")
+        ])
+        akminus1k = VariableExpression("a", [
+            Expression([VariableExpression("k"),
+                        ConstantExpression(1)], ["-"]),
+            VariableExpression("j")
+        ])
+        ajminus1kminus1 = VariableExpression("a", [
+            Expression([VariableExpression("j"),
+                        ConstantExpression(1)], ["-"]),
+            Expression([VariableExpression("k"),
+                        ConstantExpression(1)], ["-"]),
+        ])
+
+        right = Expression([
+            ajk, akminus1k, ajminus1kminus1
+        ], ["+", "-"])
+        left = ajk
+
+        kloop = ForLoopStatement(
+            body=[AssignmentStatement(left, right)],
+            index=VariableExpression("k"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("l")
+        )
+
+        jloop = ForLoopStatement(
+            body=[kloop],
+            index=VariableExpression("j"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("m")
+        )
+
+        iloop = ForLoopStatement(
+            body=[jloop],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("n")
+        )
+
+        res, error = LamportForLoopChecker().check(iloop)
+        assert not res
+        assert error == f"Variable expressions ({str(ajk)}) and ({str(akminus1k)}) have the same name but different indexes order!"
