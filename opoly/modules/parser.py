@@ -1,6 +1,7 @@
 from opoly.expressions import Expression, ConstantExpression, VariableExpression, GroupingExpression
 from opoly.statements import ForLoopStatement, AssignmentStatement
 
+
 def isfloat(s: str) -> bool:
     try:
         _ = float(s)
@@ -18,7 +19,8 @@ def isint(s: str):
     else:
         return True
 
-## TODO fix every return value with Optional[]
+# TODO fix every return value with Optional[]
+
 
 def parse_constant_expression(code: str) -> (ConstantExpression, str):
     if len(code) == 0:
@@ -122,9 +124,10 @@ def parse_expression(code: str, term_char=None) -> (Expression, str):
             if code[0] == term_char:
                 break
             return None, f"Expected {term_char}"
-        
+
         return None, rem_code
     return Expression(terms, operators), code
+
 
 def parse_assignment_statement(code: str) -> (AssignmentStatement, str):
     left, *more = code.split("=")

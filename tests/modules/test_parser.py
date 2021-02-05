@@ -92,7 +92,7 @@ class TestParsingFunctions():
             parsed, error = parse_variable_expression(code)
             assert parsed is None
             assert error == err
-    
+
     def test_operator_parser(self):
         goods = {
             "+": ("+", ""),
@@ -171,7 +171,7 @@ class TestParsingFunctions():
             parsed, error = parse_expression(code)
             assert parsed is None
             assert error == err
-        
+
         parsed, err = parse_expression("a,", term_char=")")
         assert parsed is None
         assert err == "Expected )"
