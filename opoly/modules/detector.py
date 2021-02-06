@@ -23,13 +23,19 @@ class LoopDependenciesDetector():
 
 class LamportLoopDependenciesDetector(LoopDependenciesDetector):
 
-    def generate_dependencies_from_couples(self, couples, indexes, indexes_pos_lookup, couples_index_pos_lookup) -> list[IndexSet]:
+    def generate_dependencies_from_couples(
+        self,
+        couples,
+        indexes,
+        indexes_pos_lookup,
+        couples_index_pos_lookup
+    ) -> list[IndexSet]:
         deps = []
         for gen1, gen2 in couples:
             gen1_consts = get_indexed_variable_index_constants_with_sign(gen1)
             gen2_consts = get_indexed_variable_index_constants_with_sign(gen2)
             dep_vector = tuple(c1.value - c2.value for c1,
-                                c2 in zip(gen1_consts, gen2_consts))
+                               c2 in zip(gen1_consts, gen2_consts))
             index_descriptors = [None] * len(indexes)
             for index in indexes:
                 if index.name in couples_index_pos_lookup:  # pylint: disable=no-member
@@ -48,8 +54,6 @@ class LamportLoopDependenciesDetector(LoopDependenciesDetector):
         indexes = extract_loop_indexes(loop)
         inner_statements = get_inner_loop_statments(loop)
         lefts, rights = divide_assignments(inner_statements)
-        if not all(map(lambda l: l.is_variable(), lefts)):
-            return False, "Not all left sides of statements in loop body are variable expressions!"
         generations, uses = prune_expressions(lefts, rights)
         uses = tuple(filter(lambda use: not use.is_simple(), uses))
 
@@ -73,7 +77,8 @@ class LamportLoopDependenciesDetector(LoopDependenciesDetector):
                 gen_index_pos_lookup[gen_index.name] = pos
             # Create dependency index set between gen1 and gen2
             write_write_index_sets.extend(self.generate_dependencies_from_couples(
-                itertools.permutations(same_name_generations, 2),
+                itertools.product(same_name_generations,
+                                  same_name_generations),
                 indexes,
                 index_pos_lookup,
                 gen_index_pos_lookup
@@ -90,21 +95,25 @@ class LamportLoopDependenciesDetector(LoopDependenciesDetector):
                 gen_index_pos_lookup[gen_index.name] = pos
 
             # Create dependency index set between gen1 and gen2
-            gens_uses = itertools.product(generations_by_name[var_name], uses_by_name[var_name])
-            uses_gens = itertools.product(uses_by_name[var_name], generations_by_name[var_name])
+            gens_uses = itertools.product(
+                generations_by_name[var_name], uses_by_name[var_name])
+            uses_gens = itertools.product(
+                uses_by_name[var_name], generations_by_name[var_name])
             write_read_index_sets.extend(self.generate_dependencies_from_couples(
                 itertools.chain(gens_uses, uses_gens),
                 indexes,
                 index_pos_lookup,
                 gen_index_pos_lookup
             ))
-        
+
         # Eliminate equalities
-        index_sets = set(list(write_write_index_sets) + list(write_read_index_sets))
+        index_sets = set(list(write_write_index_sets) +
+                         list(write_read_index_sets))
         # Expand sets
         expanded_index_sets = []
         for index_set in index_sets:
             expanded_index_sets.extend(index_set.extract_positives())
         # Convert sets to positive
-        positive_sets = tuple(map(lambda x: x.to_converted(), expanded_index_sets))
+        positive_sets = tuple(
+            map(lambda x: x.to_converted(), expanded_index_sets))
         return positive_sets

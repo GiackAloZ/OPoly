@@ -28,7 +28,7 @@ class Expression():
 
     def is_single(self) -> bool:
         return len(self.terms) == 1
-    
+
     def is_constant(self) -> bool:
         return isinstance(self, ConstantExpression)
 
@@ -42,9 +42,6 @@ class Expression():
         return res
 
     def __str__(self):
-        return self.stringify()
-    
-    def __repr__(self):
         return self.stringify()
 
 
@@ -127,6 +124,7 @@ def extract_variable_expressions(expr: Expression) -> tuple[VariableExpression]:
         elif not isinstance(subexpr, SingleExpression):
             variable_expressions.extend(extract_variable_expressions(subexpr))
     return tuple(variable_expressions)
+
 
 def divide_variable_expressions_by_name(
     expressions: tuple[VariableExpression]
