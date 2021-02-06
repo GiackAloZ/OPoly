@@ -43,6 +43,9 @@ class Expression():
 
     def __str__(self):
         return self.stringify()
+    
+    def __repr__(self):
+        return self.stringify()
 
 
 class GroupingExpression(Expression):

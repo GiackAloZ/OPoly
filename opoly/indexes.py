@@ -80,9 +80,20 @@ class IndexSet():
                 expanded_sets = new_sets
         # Filter out non-positive sets
         return list(filter(lambda s: s.is_lexico_positive(), expanded_sets))
+    
+    def to_converted(self) -> IndexSet:
+        return IndexSet(list([
+            IndexDescriptor(IndexDescriptorType.CONSTANT, value=v) for v in self.converted_values
+        ]))
 
     def __str__(self):
         return f"({','.join([str(descriptor) for descriptor in self.descriptors])})"
 
     def __repr__(self):
         return f"({','.join([repr(descriptor) for descriptor in self.descriptors])})"
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __hash__(self):
+        return hash(tuple([str(d) for d in self.descriptors]))

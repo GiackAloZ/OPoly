@@ -308,6 +308,23 @@ class TestLamportForLoopChecker():
         assert not res
         assert error == "All variable generations must be non-simple!"
 
+    def test_not_all_same_name_simple_or_indexed(self):
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      Expression([
+                                          VariableExpression(
+                                              "a", [VariableExpression("i")]),
+                                          VariableExpression("a")
+                                      ], ["+"]
+            ))],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(loop)
+        assert not res
+        assert error == "Same name variables must be all simple or all non-simple!"
+
     def test_variable_index_not_present(self):
         wrong = VariableExpression("a", [VariableExpression("j")])
         loop = ForLoopStatement(
