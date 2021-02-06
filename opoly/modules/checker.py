@@ -36,9 +36,17 @@ def get_inner_loop_statments(loop: ForLoopStatement) -> tuple[Statement]:
 
 def is_plain_loop(loop: ForLoopStatement) -> bool:
     return (loop.lowerbound.is_constant() and
-        ((loop.upperbound.is_variable() and loop.upperbound.is_simple()) or
-            is_simple_variable_sum_with_positive_constant(loop.upperbound)) and
+        (((loop.upperbound.is_variable() and loop.upperbound.is_simple()) or
+            is_simple_variable_sum_with_positive_constant(loop.upperbound))) and
         loop.step.is_constant() and loop.step.value == 1
+    )
+
+def is_recursively_plain_loop(loop: ForLoopStatement) -> bool:
+    return is_plain_loop(loop) and all(
+        map(
+            lambda l: is_recursively_plain_loop(l),
+            filter(lambda l: isinstance(l, ForLoopStatement), loop.body)
+        )
     )
 
 def get_indexed_variable_simple_indexes(var: VariableExpression) -> tuple[VariableExpression]:
@@ -95,7 +103,7 @@ class LamportForLoopChecker(ForLoopChecker):
     def check(self, loop: ForLoopStatement) -> (bool, str):
         if not is_perfectly_nested_loop(loop):
             return False, "Not perfectly nested loop!"
-        if not is_plain_loop(loop):
+        if not is_recursively_plain_loop(loop):
             return False, "Not plain loop!"
         indexes = extract_loop_indexes(loop)
         if not all(map(lambda i: i.is_simple(), indexes)):

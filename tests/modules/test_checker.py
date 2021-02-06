@@ -1,7 +1,7 @@
 from opoly.statements import ForLoopStatement, AssignmentStatement, BlockStatement
 from opoly.expressions import VariableExpression, ConstantExpression, Expression, GroupingExpression
 
-from opoly.modules.checker import is_perfectly_nested_loop, is_plain_loop, LamportForLoopChecker
+from opoly.modules.checker import is_perfectly_nested_loop, is_plain_loop, is_recursively_plain_loop, LamportForLoopChecker
 
 
 class TestForLoopStatementChecks():
@@ -169,9 +169,8 @@ class TestForLoopStatementChecks():
             upperbound=VariableExpression("N")
         )
 
-        assert is_plain_loop(outer_loop)
+        assert not is_recursively_plain_loop(outer_loop)
         assert is_perfectly_nested_loop(outer_loop)
-        assert LamportForLoopChecker().check(outer_loop)[0]
 
 
 class TestLamportForLoopChecker():

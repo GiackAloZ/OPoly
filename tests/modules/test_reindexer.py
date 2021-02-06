@@ -1,9 +1,10 @@
+import pytest
 import numpy as np
 import sympy as sp
 
 from opoly.modules.reindexer import reindex, invert_integer_matrix
 
-
+@pytest.mark.skip(reason="too slow to test every time")
 class TestReindexer():
 
     def test_example1(self):

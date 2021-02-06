@@ -129,6 +129,8 @@ def parse_expression(code: str, term_char=None) -> (Expression, str):
             return None, f"Expected {term_char}"
 
         return None, rem_code
+    if len(terms) == 1:
+        return terms[0], code
     return Expression(terms, operators), code
 
 
@@ -164,7 +166,7 @@ class PseudocodeForLoopParser(ABC):
     )
 
     ASSIGNMENT_REGEX = re.compile(
-        r"^VAR\s+(?P<ass>.*?\s*=\s*.*?);"
+        r"^VAR\s+(?P<ass>.*?\s*=\s*.*?);.*"
     )
 
     def parse_loop_body(self, code: str) -> (tuple[Statement], str):
@@ -177,26 +179,25 @@ class PseudocodeForLoopParser(ABC):
                 stmt, err = self.parse_for_loop(code[start:end])
                 if stmt is None:
                     return None, err
-                code = code[end:]
+                code = code[end:].strip()
                 body_stmts.append(stmt)
                 continue
 
             match = self.ASSIGNMENT_REGEX.match(code)
             if match is not None:
-                start, end = match.span()
-                assignment_code = match.groupdict()["ass"].strip()
+                assignment_code = match.group("ass").strip()
                 stmt, err = parse_assignment_statement(assignment_code)
                 if stmt is None:
                     return None, err
-                code = code[end+1:]
+                end_of_assigment = match.span("ass")[1]+1
+                code = code[end_of_assigment:].strip()
                 body_stmts.append(stmt)
-                continue
-
-            return None, "Unsupported statement"
+            else:
+                return None, f"Unsupported statement: {code}"
         return body_stmts, None
 
     def parse_for_loop(self, code: str) -> (ForLoopStatement, str):
-        code = code.strip().replace("\n", " ")
+        code = re.sub(r"\s+", " ", code.strip())
         # Parse header
         if len(code) == 0:
             return None, "Expected loop header"

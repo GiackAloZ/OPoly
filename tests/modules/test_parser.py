@@ -303,3 +303,17 @@ class TestPseudocodeForLoopParser():
         code = "FOR i FROM 1 TO N/2 STEP j { }"
         loop, err = PseudocodeForLoopParser().parse_for_loop(code)
         assert loop is None
+    
+    def test_complex_loop(self):
+        code = """
+        FOR i FROM 0 TO N {
+            VAR a[i][0] = 0;
+            FOR j FROM 1 TO M-1 {
+                VAR a[i][j] = a[i][j-1] + a[i][j+1];
+                VAR a[j][j] = 0;
+            }
+            VAR a[N][M] = a[0][0];
+        }
+        """
+        loop, err = PseudocodeForLoopParser().parse_for_loop(code)
+        assert loop is not None
