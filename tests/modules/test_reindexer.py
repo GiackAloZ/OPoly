@@ -4,6 +4,7 @@ import sympy as sp
 
 from opoly.modules.reindexer import reindex, invert_integer_matrix
 
+
 @pytest.mark.skip(reason="too slow to test every time")
 class TestReindexer():
 
@@ -64,7 +65,7 @@ class TestReindexer():
         assert bounds[j] == (sp.Max(1, sp.ceiling(sp.together((i - m)/2))),
                              sp.Min(n, sp.floor(sp.together((i - 1)/2))))
         assert bounds[i] == (3, 2*n + m)
-    
+
     def test_example3(self):
         n, m = sp.symbols("n m", integers=True)
         i, j = sp.symbols("i j", integers=True)
@@ -84,7 +85,7 @@ class TestReindexer():
         assert bounds[j] == (sp.Max(sp.ceiling(sp.together((i - n)/2)), sp.ceiling(sp.together((i + 1)/3))),
                              sp.Min(sp.floor(sp.together((i - 1)/2)), sp.floor(sp.together((m + i)/3))))
         assert bounds[i] == (5, 3*n + 2*m)
-    
+
     def test_example4(self):
         l, m, n = sp.symbols("l m n", integers=True)
         i, j, k = sp.symbols("i j k", integers=True)
@@ -107,7 +108,7 @@ class TestReindexer():
         assert bounds[j] == (sp.Max(1, i - n - l),
                              sp.Min(m, i - 2))
         assert bounds[i] == (3, n + m + l)
-    
+
     def test_example5(self):
         l, m, n = sp.symbols("l m n", integers=True)
         i, j, k = sp.symbols("i j k", integers=True)
@@ -131,7 +132,7 @@ class TestReindexer():
                              sp.Min(n, sp.floor(sp.together((i - 2)/2))))
         assert bounds[i] == (4, 2*n + m + l)
 
-    def test_example6(self):
+    def test_example5a(self):
         l, m, n = sp.symbols("l m n", integers=True)
         i, j, k = sp.symbols("i j k", integers=True)
         T = np.array([
