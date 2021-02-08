@@ -17,7 +17,7 @@ class TestReindexerFunctions():
         T = np.array([
             [1, 1],
             [0, 1]
-        ], dtype=np.int)
+        ], dtype=int)
         idxs = sp.Matrix([[i], [j]])
         ls = sp.Matrix([[1], [1]])
         us = sp.Matrix([[n], [m]])
@@ -36,7 +36,7 @@ class TestReindexerFunctions():
         T = np.array([
             [1, 1],
             [1, 0]
-        ], dtype=np.int)
+        ], dtype=int)
         idxs = sp.Matrix([[i], [j]])
         ls = sp.Matrix([[1], [1]])
         us = sp.Matrix([[n], [m]])
@@ -55,7 +55,7 @@ class TestReindexerFunctions():
         T = np.array([
             [2, 1],
             [1, 0]
-        ], dtype=np.int)
+        ], dtype=int)
         idxs = sp.Matrix([[i], [j]])
         ls = sp.Matrix([[1], [1]])
         us = sp.Matrix([[n], [m]])
@@ -75,7 +75,7 @@ class TestReindexerFunctions():
         T = np.array([
             [3, 2],
             [1, 1]
-        ], dtype=np.int)
+        ], dtype=int)
         idxs = sp.Matrix([[i], [j]])
         ls = sp.Matrix([[1], [1]])
         us = sp.Matrix([[n], [m]])
@@ -96,7 +96,7 @@ class TestReindexerFunctions():
             [1, 1, 1],
             [0, 1, 0],
             [0, 0, 1]
-        ], dtype=np.int)
+        ], dtype=int)
         idxs = sp.Matrix([[i], [j], [k]])
         ls = sp.Matrix([[1], [1], [1]])
         us = sp.Matrix([[n], [m], [l]])
@@ -119,7 +119,7 @@ class TestReindexerFunctions():
             [2, 1, 1],
             [1, 0, 0],
             [0, 0, 1]
-        ], dtype=np.int)
+        ], dtype=int)
         idxs = sp.Matrix([[i], [j], [k]])
         ls = sp.Matrix([[1], [1], [1]])
         us = sp.Matrix([[n], [m], [l]])
@@ -142,7 +142,7 @@ class TestReindexerFunctions():
             [2, 1, 1],
             [1, 1, 0],
             [0, 0, 1]
-        ], dtype=np.int)
+        ], dtype=int)
         idxs = sp.Matrix([[i], [j], [k]])
         ls = sp.Matrix([[1], [1], [1]])
         us = sp.Matrix([[n], [m], [l]])

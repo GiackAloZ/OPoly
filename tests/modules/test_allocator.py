@@ -3,7 +3,7 @@ import pytest
 
 from opoly.modules.allocator import LamportCPAllocator
 
-@pytest.mark.skip(reason="too slow to test every time")
+# @pytest.mark.skip(reason="too slow to test every time")
 class TestLamportCPAllocator():
 
     def test_2d_identity(self):

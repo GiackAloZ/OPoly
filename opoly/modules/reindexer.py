@@ -123,7 +123,7 @@ def reindex(T_inv: np.array, x: sp.Matrix, ls: sp.Matrix, us: sp.Matrix):
     return enclose_bounds(bounds)
 
 def invert_integer_matrix(mat: np.ndarray):
-    return np.linalg.inv(mat).round().astype(np.int)
+    return np.linalg.inv(mat).round().astype(int)
 
 class LamportReindexer():
 
