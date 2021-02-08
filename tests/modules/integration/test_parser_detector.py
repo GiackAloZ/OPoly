@@ -3,7 +3,7 @@ from opoly.modules.checker import LamportForLoopChecker
 from opoly.modules.detector import LamportLoopDependenciesDetector
 
 
-class TestPseudocodeForLoopParserAndLamportChecker():
+class TestPseudocodeForLoopParserToLamportDetector():
 
     def test_1d_loop(self):
         code = "FOR i FROM 0 TO N { VAR a[i]=a[i+1]; }"

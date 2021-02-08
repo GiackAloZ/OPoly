@@ -2,7 +2,7 @@ from opoly.modules.parser import PseudocodeForLoopParser
 from opoly.modules.checker import LamportForLoopChecker
 
 
-class TestPseudocodeForLoopParserAndLamportChecker():
+class TestPseudocodeForLoopParserToLamportChecker():
 
     def test_1d_loop(self):
         code = "FOR i FROM 0 TO N { VAR a[i]=a[i+1]; }"
