@@ -12,8 +12,8 @@ from opoly.expressions import (
 
 def is_simple_variable_sum_with_positive_constant(expr: Expression) -> bool:
     if (len(expr.operators) == 1 and
-            (expr.operators[0] == "+" or expr.operators[0] == "-") and
-            len(expr.terms) == 2
+        (expr.operators[0] == "+" or expr.operators[0] == "-") and
+        len(expr.terms) == 2
         ):
         if expr.terms[0].is_variable():
             return expr.terms[0].is_simple() and expr.terms[1].is_constant()
@@ -82,6 +82,7 @@ def get_indexed_variable_index_constants(var: VariableExpression) -> tuple[Const
             return None
     return constants
 
+
 def get_indexed_variable_index_constants_with_sign(var: VariableExpression) -> tuple[ConstantExpression]:
     constants = []
     for idx in var.indexes:
@@ -89,12 +90,14 @@ def get_indexed_variable_index_constants_with_sign(var: VariableExpression) -> t
             constants.append(ConstantExpression(0))
         elif is_simple_variable_sum_with_positive_constant(idx):
             if idx.terms[0].is_variable():
-                constants.append(ConstantExpression(idx.terms[1].value * (-1 if idx.operators[0] == "-" else 1)))
+                constants.append(ConstantExpression(
+                    idx.terms[1].value * (-1 if idx.operators[0] == "-" else 1)))
             else:
                 constants.append(ConstantExpression(idx.terms[1].value))
         else:
             return None
     return constants
+
 
 def extract_loop_indexes(loop: ForLoopStatement) -> tuple[VariableExpression]:
     inner_indexes = []
@@ -131,7 +134,7 @@ class LamportForLoopChecker(ForLoopChecker):
         indexes = extract_loop_indexes(loop)
         if not all(map(lambda i: i.is_simple(), indexes)):
             return False, "Loop indexes are not simple!"
-        index_names = tuple([i.name for i in indexes]) # pylint: disable=no-member
+        index_names = tuple([i.name for i in indexes])  # pylint: disable=no-member
         if not len(set(index_names)) == len(index_names):
             return False, "Not all index names in loop are distinct!"
         inner_statements = get_inner_loop_statments(loop)
@@ -145,10 +148,12 @@ class LamportForLoopChecker(ForLoopChecker):
         if any(map(lambda gen: gen.is_simple(), generations)):
             return False, "All variable generations must be non-simple!"
         all_variables = tuple(list(generations) + list(uses))
-        all_variables_by_name = divide_variable_expressions_by_name(all_variables)
+        all_variables_by_name = divide_variable_expressions_by_name(
+            all_variables)
         for _, same_name_vars in all_variables_by_name.items():
             all_simple = all(map(lambda v: v.is_simple(), same_name_vars))
-            all_non_simple = all(map(lambda v: not v.is_simple(), same_name_vars))
+            all_non_simple = all(
+                map(lambda v: not v.is_simple(), same_name_vars))
             if not (all_simple or all_non_simple):
                 return False, "Same name variables must be all simple or all non-simple!"
         # Filter non-simple uses
@@ -163,9 +168,6 @@ class LamportForLoopChecker(ForLoopChecker):
                 var1_constants = get_indexed_variable_index_constants(var1)
                 if var1_indexes is None or var1_constants is None:
                     return False, f"Variable expression ({str(var1)}) has incorrect indexes!"
-                # TODO check operators
-                # if var1_operator not in ("+", "-"):
-                #     return False, f"Operator in variable index not supported!"
                 var1_index_names = tuple([i.name for i in var1_indexes])
 
                 if not all(map(lambda i: i.name in index_names, var1_indexes)):

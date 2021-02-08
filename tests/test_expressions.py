@@ -20,7 +20,7 @@ class TestExpressions():
 
     def test_simple_variable_expression(self):
         expr = VariableExpression("a")
-        assert str(expr) == "a"
+        assert repr(expr) == "a"
         assert expr.is_variable()
 
     def test_indexed_variable_expression(self):
