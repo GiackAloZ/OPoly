@@ -4,6 +4,7 @@ from datetime import timedelta
 import numpy as np
 import pymzn
 
+from opoly.modules.minizinc import LAMPORT_ALLOCATOR
 from opoly.modules.minizinc.utils import solve_model
 
 
@@ -13,7 +14,7 @@ class LamportCPAllocator(ABC):
         if len(schedule.shape) != 1:
             return None, "Schedule must be a one-dimensional vector!"
         sol, err = solve_model(
-            model_path="./opoly/modules/minizinc/models/lamport_allocator.mzn",
+            model=LAMPORT_ALLOCATOR,
             data={
                 "dim": schedule.shape[0],
                 "a": schedule.tolist()

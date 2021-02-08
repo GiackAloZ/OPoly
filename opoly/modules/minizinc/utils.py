@@ -1,15 +1,18 @@
+from pkg_resources import resource_filename
+
+import opoly.modules.minizinc as minizinc
 import pymzn
 
 
 def solve_model(
-    model_path: str,
+    model: str,
     data: dict,
     solver=pymzn.chuffed,
     timeout: int = 5
 ) -> (pymzn.Solutions, str):
     try:
         sols = pymzn.minizinc(
-            mzn=model_path,
+            mzn=model,
             data=data,
             solver=solver,
             timeout=timeout
