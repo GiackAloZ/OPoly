@@ -6,6 +6,7 @@ from opoly.expressions import (
     ConstantExpression,
     VariableExpression,
     FunctionExpression,
+    UnaryExpression,
     extract_variable_expressions,
     divide_variable_expressions_by_name
 )
@@ -50,7 +51,11 @@ class TestExpressions():
             VariableExpression("j")
         ))
         assert expr.name == "max"
-        assert str(expr) == "max(i,j)"
+        assert str(expr) == "max(i, j)"
+    
+    def test_unary_expression(self):
+        expr = UnaryExpression(VariableExpression("n"), "-")
+        assert str(expr) == "-n"
 
     def test_empty_expression(self):
         with pytest.raises(ValueError):

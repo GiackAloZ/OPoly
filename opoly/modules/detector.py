@@ -5,7 +5,7 @@ from opoly.statements import ForLoopStatement
 from opoly.indexes import IndexDescriptor, IndexDescriptorType, IndexSet
 from opoly.modules.checker import (
     extract_loop_indexes,
-    get_inner_loop_statments,
+    get_inner_loop_statements,
     prune_expressions,
     divide_assignments,
     divide_variable_expressions_by_name,
@@ -52,7 +52,7 @@ class LamportLoopDependenciesDetector(LoopDependenciesDetector):
 
     def extract_dependencies(self, loop: ForLoopStatement) -> tuple[IndexSet]:
         indexes = extract_loop_indexes(loop)
-        inner_statements = get_inner_loop_statments(loop)
+        inner_statements = get_inner_loop_statements(loop)
         lefts, rights = divide_assignments(inner_statements)
         generations, uses = prune_expressions(lefts, rights)
         uses = tuple(filter(lambda use: not use.is_simple(), uses))

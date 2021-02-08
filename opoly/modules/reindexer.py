@@ -2,15 +2,25 @@ import numpy as np
 import sympy as sp
 from sympy.solvers.inequalities import reduce_inequalities
 
+from opoly.expressions import ConstantExpression, VariableExpression
+from opoly.statements import ForLoopStatement
+from opoly.modules.checker import (
+    extract_loop_indexes,
+    extract_loop_bounds,
+    get_simple_variable_sum_and_constant,
+    get_inner_loop_statements
+)
+from opoly.modules.parser import parse_expression
 
 def reduce_ineq(
     ineq: sp.core.relational._Inequality,
     var: sp.core.symbol.Symbol
 ) -> sp.core.relational._Inequality:
-    interval = reduce_inequalities(ineq, var)
+    interval = reduce_inequalities(ineq, [var])
     args = interval.args if isinstance(interval, sp.And) else [interval]
     for inter in args:
-        inter = inter.canonical
+        if not inter.lhs.has(var):
+            inter = inter.canonical
         if not (inter.has(sp.oo) or inter.has(-sp.oo)):
             return inter
 
@@ -114,3 +124,50 @@ def reindex(T_inv: np.array, x: sp.Matrix, ls: sp.Matrix, us: sp.Matrix):
 
 def invert_integer_matrix(mat: np.ndarray):
     return np.linalg.inv(mat).round().astype(np.int)
+
+class LamportReindexer():
+
+    def extract_bounds(self, bounds):
+        res = []
+        for b in bounds:
+            if b.is_constant():
+                res.append(b.value)
+            elif b.is_variable():
+                res.append(sp.var(b.name))
+            else:
+                v, c = get_simple_variable_sum_and_constant(b)
+                res.append(sp.var(v.name) + c.value)
+        return sp.Matrix(res)
+
+    def reindex(self, loop: ForLoopStatement, allocation: np.ndarray) -> ForLoopStatement:
+        indexes = sp.Matrix(list(
+            [sp.var(i.name) for i in extract_loop_indexes(loop)] # pylint: disable=no-member
+        ))
+        lower_bounds, upper_bounds = list(zip(*extract_loop_bounds(loop)))
+        ls = self.extract_bounds(lower_bounds)
+        us = self.extract_bounds(upper_bounds)
+        new_bounds = reindex(
+            invert_integer_matrix(allocation),
+            indexes,
+            ls,
+            us
+        )
+        statements = get_inner_loop_statements(loop)
+        last_loop = None
+
+        for i in reversed(indexes):
+            lb, _ = parse_expression(sp.ccode(new_bounds[i][0]))
+            ub, _ = parse_expression(sp.ccode(new_bounds[i][1]))
+
+            if last_loop is None:
+                body = statements
+            else:
+                body = [last_loop]
+            
+            last_loop = ForLoopStatement(
+                body=body,
+                index=VariableExpression(repr(i)),
+                lowerbound=lb,
+                upperbound=ub
+            )
+        return last_loop

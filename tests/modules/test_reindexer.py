@@ -2,11 +2,14 @@ import pytest
 import numpy as np
 import sympy as sp
 
+from opoly.expressions import Expression, VariableExpression, ConstantExpression, GroupingExpression
+from opoly.statements import AssignmentStatement, ForLoopStatement
 from opoly.modules.reindexer import reindex, invert_integer_matrix
+from opoly.modules.reindexer import LamportReindexer
 
 
-@pytest.mark.skip(reason="too slow to test every time")
-class TestReindexer():
+# @pytest.mark.skip(reason="too slow to test every time")
+class TestReindexerFunctions():
 
     def test_example1(self):
         n, m = sp.symbols("n m", integers=True)
@@ -155,3 +158,138 @@ class TestReindexer():
                              sp.Min(i - 2, m + n, sp.floor(sp.together((i + m - 1)/2))))
         assert bounds[i] == (sp.Max(4, 5 - l, 5 - m),
                              sp.Min(l + m + 2*n, l + 2*m + 2*n - 1, 2*l + m + 2*n - 1))
+
+
+# @pytest.mark.skip(reason="too slow to test every time")
+class TestLamportReindexer():
+
+    def test_1d_identity(self):
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      VariableExpression("b", [VariableExpression("i")]))],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        allocation = np.array([[1]])
+        reindexed_loop = LamportReindexer().reindex(loop, allocation)
+        assert reindexed_loop is not None
+
+    def test_1d_identity2(self):
+        loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      VariableExpression("b", [VariableExpression("i")]))],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression(
+                [VariableExpression("N"), ConstantExpression(1)], "-")
+        )
+        allocation = np.array([[1]])
+        reindexed_loop = LamportReindexer().reindex(loop, allocation)
+        assert reindexed_loop is not None
+
+    def test_2d_identity(self):
+        inner_loop = ForLoopStatement(
+            body=[AssignmentStatement(VariableExpression("a", [VariableExpression("j")]),
+                                      VariableExpression("b", [VariableExpression("j")]))],
+            index=VariableExpression("j"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("M")
+        )
+        outer_loop = ForLoopStatement(
+            body=[inner_loop],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        allocation = np.array([[1, 0], [0, 1]])
+        reindexed_loop = LamportReindexer().reindex(outer_loop, allocation)
+        assert reindexed_loop is not None
+
+    def test_2d_example1(self):
+        aij = VariableExpression(
+            "a", [VariableExpression("i"), VariableExpression("j")])
+        aiminus1j = VariableExpression("a", [Expression([
+            VariableExpression("i"),
+            ConstantExpression(1)],
+            ["-"]),
+            VariableExpression("j")
+        ])
+        aijminus1 = VariableExpression("a", [VariableExpression("i"),
+                                             Expression([
+                                                 VariableExpression("j"),
+                                                 ConstantExpression(1)
+                                             ], ["-"])
+                                             ])
+        inner_loop = ForLoopStatement(
+            body=[AssignmentStatement(aij, Expression([
+                GroupingExpression([aiminus1j, aij, aijminus1], ["+", "+"]),
+                ConstantExpression(3.0)], ["/"]))],
+            index=VariableExpression("j"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression(
+                [VariableExpression("M"), ConstantExpression(1)], "-")
+        )
+        outer_loop = ForLoopStatement(
+            body=[inner_loop],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression(
+                [VariableExpression("N"), ConstantExpression(1)], "-")
+        )
+        allocation = np.array([[1, 1], [0, 1]])
+        reindexed_loop = LamportReindexer().reindex(outer_loop, allocation)
+        assert reindexed_loop is not None
+
+    def test_3d_example5(self):
+        ujk = VariableExpression("u",[
+            VariableExpression("j"),
+            VariableExpression("k")
+        ])
+        ujp1k = VariableExpression("u",[
+            Expression([VariableExpression("j"), ConstantExpression(1)], ["+"]),
+            VariableExpression("k")
+        ])
+        ujm1k = VariableExpression("u",[
+            Expression([VariableExpression("j"), ConstantExpression(1)], ["-"]),
+            VariableExpression("k")
+        ])
+        ujkp1 = VariableExpression("u",[
+            VariableExpression("j"),
+            Expression([VariableExpression("k"), ConstantExpression(1)], ["+"])
+        ])
+        ujkm1 = VariableExpression("u",[
+            VariableExpression("j"),
+            Expression([VariableExpression("k"), ConstantExpression(1)], ["-"])
+        ])
+        left = ujk
+        right = Expression([
+            GroupingExpression([ujp1k, ujm1k, ujkp1, ujkm1], ["+", "+", "+"]),
+            ConstantExpression(0.25)
+        ], ["/"])
+
+        kloop = ForLoopStatement(
+            body=[AssignmentStatement(left, right)],
+            index=VariableExpression("k"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression([VariableExpression("L"), ConstantExpression(2)], ["-"])
+        )
+        jloop = ForLoopStatement(
+            body=[kloop],
+            index=VariableExpression("j"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression([VariableExpression("M"), ConstantExpression(2)], ["-"])
+        )
+        iloop = ForLoopStatement(
+            body=[jloop],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        allocation = np.array([
+            [2, 1, 1],
+            [1, 0, 0],
+            [0, 0, 1]
+        ])
+        reindexed_loop = LamportReindexer().reindex(iloop, allocation)
+        assert reindexed_loop is not None

@@ -1,8 +1,18 @@
 from abc import ABC, abstractmethod
 import re
 
-from opoly.expressions import Expression, ConstantExpression, VariableExpression, GroupingExpression
+from opoly.expressions import (
+    Expression, ConstantExpression, VariableExpression, GroupingExpression, FunctionExpression, UnaryExpression)
 from opoly.statements import Statement, ForLoopStatement, AssignmentStatement
+
+FUNCTION_EXPRESSION_REGEX = re.compile(r"^(?P<name>\w+)\((?P<terms>.*)\)")
+FUNCTION_TERMS_EXPRESSION_REGEX = re.compile(r"^(?P<term>[^,\s].*?)(,|$)")
+UNARY_OPERATORS = [
+    "-"
+]
+BINARY_OPERATORS = [
+    "+", "-", "*", "/"
+]
 
 
 def isfloat(s: str) -> bool:
@@ -67,10 +77,7 @@ def parse_variable_expression(code: str) -> (VariableExpression, str):
 def parse_operator(code: str) -> (str, str):
     if len(code) == 0:
         return None, "Expected operator"
-    supported_operators = [
-        "+", "-", "*", "/"
-    ]
-    if code[0] not in supported_operators:
+    if code[0] not in BINARY_OPERATORS:
         return None, "Unsupported operator"
     return code[0], code[1:]
 
@@ -87,23 +94,62 @@ def parse_grouping_expression(code: str) -> (GroupingExpression, str):
     return GroupingExpression([expr], []), rem_code[1:]
 
 
+def parse_simple_function_expression(code: str) -> (FunctionExpression, str):
+    match = FUNCTION_EXPRESSION_REGEX.match(code)
+    if not match:
+        return None, "Expected function expression"
+    name = match.group("name")
+    terms_code = match.group("terms").strip()
+    terms = []
+    while (term_match := FUNCTION_TERMS_EXPRESSION_REGEX.match(terms_code)) is not None:
+        term, err = parse_expression(term_match.group("term").strip())
+        if term is None:
+            return None, err
+        terms_code = terms_code[term_match.span()[1]:].strip()
+        terms.append(term)
+    if len(terms_code) != 0:
+        return None, "Function expression not well formatted"
+    return FunctionExpression(name, args=terms), code[match.span()[1]:]
+
+def parse_unary_expression(code: str) -> (UnaryExpression, str):
+    if len(code) == 0:
+        return None, "Expected unary expression"
+    if code[0] not in UNARY_OPERATORS:
+        return None, "Unsupported unary operator"
+    if parse_unary_expression(code[1:].strip())[0] is not None:
+        return None, "Unsupported unary operator"
+    term, rem_code = parse_single_expression(code[1:].strip())
+    if term is None:
+        return None, rem_code
+    return UnaryExpression(term, code[0]), rem_code
+
+def parse_single_expression(code: str) -> (Expression, str):
+    code = code.strip()
+    # Check for expression
+    if len(code) == 0:
+        return None, "Expected expression"
+
+    # Check different subexpression terms
+    if FUNCTION_EXPRESSION_REGEX.match(code) is not None:
+        next_term, code = parse_simple_function_expression(code)
+    elif code[0].isalpha():
+        next_term, code = parse_variable_expression(code)
+    elif code[0].isnumeric():
+        next_term, code = parse_constant_expression(code)
+    elif code[0] == "(":
+        next_term, code = parse_grouping_expression(code)
+    elif code[0] in UNARY_OPERATORS:
+        next_term, code = parse_unary_expression(code)
+    else:
+        return None, "Unsupported expression term"
+    return next_term, code
+
 def parse_expression(code: str, term_char=None) -> (Expression, str):
     terms = []
     operators = []
     while True:
-        # Check for expression
-        if len(code) == 0:
-            return None, "Expected expression"
-
-        # Check different subexpression terms
-        if code[0].isalpha():
-            next_term, code = parse_variable_expression(code.strip())
-        elif code[0].isnumeric():
-            next_term, code = parse_constant_expression(code.strip())
-        elif code[0] == "(":
-            next_term, code = parse_grouping_expression(code.strip())
-        else:
-            return None, "Unsupported expression term"
+        # Parse next expression
+        next_term, code = parse_single_expression(code)
         if next_term is None:
             return None, code
         terms.append(next_term)

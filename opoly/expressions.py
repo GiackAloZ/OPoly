@@ -113,7 +113,21 @@ class FunctionExpression(SingleExpression):
         return self._args
 
     def stringify(self) -> str:
-        return f"{self.name}({','.join([str(t) for t in self.args])})"
+        return f"{self.name}({', '.join([str(t) for t in self.args])})"
+
+
+class UnaryExpression(Expression):
+
+    def __init__(self, term: Expression, unary_operator: str):
+        super().__init__([term], [])
+        self._unary_operator = unary_operator
+
+    @property
+    def unary_operator(self) -> str:
+        return self._unary_operator
+
+    def stringify(self) -> str:
+        return f"{self.unary_operator}{str(self.terms[0])}"
 
 
 def extract_variable_expressions(expr: Expression) -> tuple[VariableExpression]:

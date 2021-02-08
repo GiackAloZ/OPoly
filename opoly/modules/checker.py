@@ -17,10 +17,10 @@ def is_simple_variable_sum_with_positive_constant(expr: Expression) -> bool:
         ):
         if expr.terms[0].is_variable():
             return expr.terms[0].is_simple() and expr.terms[1].is_constant()
-        if expr.terms[1].is_variable():
-            return expr.terms[1].is_simple() and expr.terms[0].is_constant() and expr.operators[0] == "+"
     return False
 
+def get_simple_variable_sum_and_constant(expr: Expression) -> (VariableExpression, ConstantExpression):
+    return expr.terms[0], ConstantExpression(expr.terms[1].value * (-1 if expr.operators[0] == "-" else 1))
 
 def is_perfectly_nested_loop(loop: ForLoopStatement) -> bool:
     if len(loop.body) > 1:
@@ -30,14 +30,14 @@ def is_perfectly_nested_loop(loop: ForLoopStatement) -> bool:
     return True
 
 
-def get_inner_loop_statments(loop: ForLoopStatement) -> tuple[Statement]:
+def get_inner_loop_statements(loop: ForLoopStatement) -> tuple[Statement]:
     if len(loop.body) == 1 and isinstance(loop.body[0], ForLoopStatement):
-        return get_inner_loop_statments(loop.body[0])
+        return get_inner_loop_statements(loop.body[0])
     return loop.body
 
 
 def is_plain_loop(loop: ForLoopStatement) -> bool:
-    return (loop.lowerbound.is_constant() and
+    return ((loop.lowerbound.is_constant() and loop.lowerbound.value >= 0) and
             (((loop.upperbound.is_variable() and loop.upperbound.is_simple()) or
               is_simple_variable_sum_with_positive_constant(loop.upperbound))) and
             loop.step.is_constant() and loop.step.value == 1
@@ -59,10 +59,7 @@ def get_indexed_variable_simple_indexes(var: VariableExpression) -> tuple[Variab
         if idx.is_variable() and idx.is_simple():
             indexes.append(idx)
         elif is_simple_variable_sum_with_positive_constant(idx):
-            if idx.terms[0].is_variable():
-                indexes.append(idx.terms[0])
-            else:
-                indexes.append(idx.terms[1])
+            indexes.append(idx.terms[0])
         else:
             return None
     return indexes
@@ -74,10 +71,7 @@ def get_indexed_variable_index_constants(var: VariableExpression) -> tuple[Const
         if idx.is_variable() and idx.is_simple():
             constants.append(ConstantExpression(0))
         elif is_simple_variable_sum_with_positive_constant(idx):
-            if idx.terms[0].is_variable():
-                constants.append(idx.terms[1])
-            else:
-                constants.append(idx.terms[0])
+            constants.append(idx.terms[1])
         else:
             return None
     return constants
@@ -89,11 +83,8 @@ def get_indexed_variable_index_constants_with_sign(var: VariableExpression) -> t
         if idx.is_variable() and idx.is_simple():
             constants.append(ConstantExpression(0))
         elif is_simple_variable_sum_with_positive_constant(idx):
-            if idx.terms[0].is_variable():
-                constants.append(ConstantExpression(
+            constants.append(ConstantExpression(
                     idx.terms[1].value * (-1 if idx.operators[0] == "-" else 1)))
-            else:
-                constants.append(ConstantExpression(idx.terms[1].value))
         else:
             return None
     return constants
@@ -104,6 +95,12 @@ def extract_loop_indexes(loop: ForLoopStatement) -> tuple[VariableExpression]:
     if isinstance(loop.body[0], ForLoopStatement):
         inner_indexes = extract_loop_indexes(loop.body[0])
     return tuple([loop.index] + list(inner_indexes))
+
+def extract_loop_bounds(loop: ForLoopStatement) -> tuple[(Expression, Expression)]:
+    inner_bounds = []
+    if isinstance(loop.body[0], ForLoopStatement):
+        inner_bounds = extract_loop_bounds(loop.body[0])
+    return tuple([(loop.lowerbound, loop.upperbound)] + list(inner_bounds))
 
 
 def has_same_simple_indexes(var1: VariableExpression, var2: VariableExpression) -> bool:
@@ -137,7 +134,7 @@ class LamportForLoopChecker(ForLoopChecker):
         index_names = tuple([i.name for i in indexes])  # pylint: disable=no-member
         if not len(set(index_names)) == len(index_names):
             return False, "Not all index names in loop are distinct!"
-        inner_statements = get_inner_loop_statments(loop)
+        inner_statements = get_inner_loop_statements(loop)
         # TODO add new statement to verify this
         # if not all(map(lambda stmt: isinstance(stmt, AssignmentStatement), inner_statements)):
         #     return False, "Not all statements in loop body are assignments!"

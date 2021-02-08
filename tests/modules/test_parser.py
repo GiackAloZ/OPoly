@@ -3,9 +3,11 @@ from opoly.modules.parser import (
     parse_constant_expression,
     parse_variable_expression,
     parse_grouping_expression,
+    parse_simple_function_expression,
     parse_operator,
     parse_expression,
     parse_assignment_statement,
+    parse_unary_expression,
     PseudocodeForLoopParser
 )
 
@@ -142,13 +144,60 @@ class TestParsingFunctions():
             assert parsed is None
             assert error == err
 
+    def test_simple_function_parser(self):
+        goods = {
+            "max(a)": ("max(a)", ""),
+            "max(a) + i": ("max(a)", " + i"),
+            "max(a, b, c) + i": ("max(a, b, c)", " + i"),
+        }
+        bads = {
+            "": "Expected function expression",
+            "max": "Expected function expression",
+            "max(a": "Expected function expression",
+            "max(,a)": "Function expression not well formatted",
+            "max(a b)": "Unsupported operator",
+        }
+        for code, res in goods.items():
+            parsed, rem = parse_simple_function_expression(code)
+            assert parsed is not None
+            assert str(parsed) == res[0]
+            assert rem == res[1]
+        for code, err in bads.items():
+            parsed, error = parse_simple_function_expression(code)
+            assert parsed is None
+            assert error == err
+    
+    def test_unary_expression_parser(self):
+        goods = {
+            "-1": ("-1", ""),
+            "-n": ("-n", ""),
+            "-(n+1)": ("-(n + 1)", ""),
+            "-(a[1]-1)": ("-(a[1] - 1)", ""),
+            "- a": ("-a", "")
+        }
+        bads = {
+            "--a": "Unsupported unary operator",
+            "- -a": "Unsupported unary operator"
+        }
+        for code, res in goods.items():
+            parsed, rem = parse_unary_expression(code)
+            assert parsed is not None
+            assert str(parsed) == res[0]
+            assert rem == res[1]
+        for code, err in bads.items():
+            parsed, error = parse_unary_expression(code)
+            assert parsed is None
+            assert error == err
+
     def test_expression_parser(self):
         goods = {
+            "1": ("1", ""),
             "a + i": ("a + i", ""),
             "a[i] + b[i]": ("a[i] + b[i]", ""),
             "a[i] + b[i] / 3": ("a[i] + b[i] / 3", ""),
             "a[i+1][j+1] + a[i-1][j-1] / 3": ("a[i + 1][j + 1] + a[i - 1][j - 1] / 3", ""),
             "(a[i+1][j+1] + a[i-1][j-1]) / 3.0": ("(a[i + 1][j + 1] + a[i - 1][j - 1]) / 3.0", ""),
+            "(-n + i - 1) / 2.0": ("(-n + i - 1) / 2.0", "")
         }
         bads = {
             "": "Expected expression",

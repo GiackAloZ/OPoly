@@ -444,36 +444,7 @@ class TestLamportForLoopChecker():
         assert not res
         assert error == f"Variable expression ({str(wrong)}) has incorrect indexes!"
 
-    def test_good_inverted_order_index_expression(self):
-        inner_loop = ForLoopStatement(
-            body=[AssignmentStatement(
-                left_term=VariableExpression("a", [VariableExpression("j")]),
-                right_term=Expression([
-                    GroupingExpression([
-                        VariableExpression("a", [Expression([
-                            VariableExpression("j"), ConstantExpression(1)], "-")]),
-                        VariableExpression("a", [VariableExpression("j")]),
-                        VariableExpression("a", [Expression([
-                            ConstantExpression(1), VariableExpression("j")], "+")])
-                    ], ["+", "+"]),
-                    ConstantExpression(3.0)
-                ], "/")
-            )],
-            index=VariableExpression("j"),
-            lowerbound=ConstantExpression(1),
-            upperbound=Expression(
-                [VariableExpression("M"), ConstantExpression(1)], ["-"])
-        )
-
-        outer_loop = ForLoopStatement(
-            body=[inner_loop],
-            index=VariableExpression("i"),
-            lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("N")
-        )
-        assert LamportForLoopChecker().check(outer_loop)[0]
-
-    def test_bad_inverted_order_index_expression(self):
+    def test_inverted_order_index_expression(self):
         wrong = VariableExpression("a", [Expression([
             ConstantExpression(1), VariableExpression("j")], "-")])
         inner_loop = ForLoopStatement(
