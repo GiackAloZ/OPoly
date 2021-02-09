@@ -14,6 +14,7 @@ from opoly.expressions import (
 
 class StatementType(Enum):
     FOR_LOOP = auto()
+    DECLARATION = auto()
     ASSIGNMENT = auto()
 
 
@@ -35,6 +36,7 @@ class Statement(ABC):
 
 
 class AssignmentStatement(Statement):
+
     def __init__(self, left_term: VariableExpression, right_term: Expression):
         super().__init__(StatementType.ASSIGNMENT)
         self._left_term = left_term
@@ -50,6 +52,31 @@ class AssignmentStatement(Statement):
 
     def stringify(self) -> str:
         return f"{self.left_term} = {self.right_term}"
+
+
+class DeclarationStatement(Statement):
+    def __init__(self, var_type: str, variable: VariableExpression, initialization: Expression = None):
+        super().__init__(StatementType.DECLARATION)
+        self._var_type = var_type
+        self._variable = variable
+        self._initialization = initialization
+    
+    @property
+    def var_type(self) -> str:
+        return self._var_type
+    
+    @property
+    def variable(self) -> VariableExpression:
+        return self._variable
+    
+    @property
+    def initialization(self) -> Expression:
+        return self._initialization
+    
+    def stringify(self) -> str:
+        decl_str = f"{self.var_type} {str(self.variable)}"
+        init_str = f" = {str(self.initialization)}" if self.initialization is not None else ""
+        return f"{decl_str}{init_str}"
 
 
 class BlockStatement(Statement, ABC):
@@ -110,6 +137,7 @@ class ForLoopStatement(BlockStatement):
         step = "" if isinstance(self.step, ConstantExpression) or self.step.value == 1 \
             else f" step {self.step}"
         return f"{head}{step}"
+
 
 def divide_assignments(
     assignments: tuple[AssignmentStatement]

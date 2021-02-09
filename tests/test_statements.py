@@ -11,6 +11,7 @@ from opoly.expressions import (
 from opoly.statements import (
     StatementType,
     AssignmentStatement,
+    DeclarationStatement,
     ForLoopStatement,
     divide_assignments,
     prune_expressions
@@ -151,6 +152,28 @@ class TestAssignmentStatement():
             "b[i + 1][j + 1]", "b[i - 1][j - 1]"
         ]
 
+
+class TestDeclarationStatement():
+    
+    def test_simple_declaration(self):
+        stmt = DeclarationStatement(
+            var_type="int",
+            variable=VariableExpression("i")
+        )
+        assert stmt.stype == StatementType.DECLARATION
+        assert str(stmt) == "int i"
+    
+    def test_complex_declaration(self):
+        stmt = DeclarationStatement(
+            var_type="int",
+            variable=VariableExpression("i"),
+            initialization=Expression([
+                VariableExpression("j"),
+                ConstantExpression(2)
+            ], ["-"])
+        )
+        assert stmt.stype == StatementType.DECLARATION
+        assert str(stmt) == "int i = j - 2"
 
 class TestForLoopStatement():
 

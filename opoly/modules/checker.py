@@ -135,9 +135,8 @@ class LamportForLoopChecker(ForLoopChecker):
         if not len(set(index_names)) == len(index_names):
             return False, "Not all index names in loop are distinct!"
         inner_statements = get_inner_loop_statements(loop)
-        # TODO add new statement to verify this
-        # if not all(map(lambda stmt: isinstance(stmt, AssignmentStatement), inner_statements)):
-        #     return False, "Not all statements in loop body are assignments!"
+        if not all(map(lambda stmt: isinstance(stmt, AssignmentStatement), inner_statements)):
+            return False, "Not all statements in loop body are assignments!"
         lefts, rights = divide_assignments(inner_statements)
         if not all(map(lambda l: l.is_variable(), lefts)):
             return False, "Not all left sides of statements in loop body are variable expressions!"
