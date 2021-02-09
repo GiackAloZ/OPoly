@@ -119,7 +119,7 @@ class TestCCodeGenerator():
             upperbound=VariableExpression("N")
         )
         code = CCodeGenerator().generate(stmt)
-        assert code == "for(int i = 1; i <= N; i += 1) {\n    int x = 1;\n    a[i] = x + 1;\n}"
+        assert code == "for(int i = 1; i <= N; i++) {\n    int x = 1;\n    a[i] = x + 1;\n}"
 
     def test_nested_for_loop(self):
         inner_loop = ForLoopStatement(
@@ -150,4 +150,4 @@ class TestCCodeGenerator():
             upperbound=VariableExpression("N")
         )
         code = CCodeGenerator().generate(outer_loop)
-        assert code == "for(int i = 1; i <= N; i += 1) {\n    #pragma omp parallel for\n    for(int j = 1; j <= M; j += 1) {\n        int x = 1;\n        a[j] = x + 1;\n    }\n}"
+        assert code == "for(int i = 1; i <= N; i++) {\n    #pragma omp parallel for\n    for(int j = 1; j <= M; j++) {\n        int x = 1;\n        a[j] = x + 1;\n    }\n}"

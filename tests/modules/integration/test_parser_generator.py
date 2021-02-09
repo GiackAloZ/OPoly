@@ -93,7 +93,7 @@ class TestPseudocodeForLoopParserToCCodeGenerator():
         code = "FOR i FROM 0 TO N { STM a[i]=a[i+1]; }"
         parallel_code = self._pipeline_parser_scheduler(code)
         print(parallel_code)
-        assert parallel_code == """for(int new_i = 0; new_i <= N; new_i += 1) {
+        assert parallel_code == """for(int new_i = 0; new_i <= N; new_i++) {
     int i = new_i;
     a[i] = a[i + 1];
 }"""
@@ -102,9 +102,9 @@ class TestPseudocodeForLoopParserToCCodeGenerator():
         code = "FOR i FROM 1 TO N-1 { FOR j FROM 1 TO M-1 { STM a[i][j] = (a[i-1][j] + a[i][j] + a[i][j-1]) / 3.0; } }"
         parallel_code = self._pipeline_parser_scheduler(code)
         print(parallel_code)
-        assert parallel_code == """for(int new_i = 2; new_i <= M + N - 2; new_i += 1) {
+        assert parallel_code == """for(int new_i = 2; new_i <= M + N - 2; new_i++) {
     #pragma omp parallel for
-    for(int new_j = fmax(1, -N + new_i + 1); new_j <= fmin(M - 1, new_i - 1); new_j += 1) {
+    for(int new_j = fmax(1, -N + new_i + 1); new_j <= fmin(M - 1, new_i - 1); new_j++) {
         int i = new_i - new_j;
         int j = new_j;
         a[i][j] = (a[i - 1][j] + a[i][j] + a[i][j - 1]) / 3.0;
@@ -115,9 +115,9 @@ class TestPseudocodeForLoopParserToCCodeGenerator():
         code = "FOR i FROM 1 TO N-1 { FOR j FROM 1 TO M-1 { STM a[j] = (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
         parallel_code = self._pipeline_parser_scheduler(code)
         print(parallel_code)
-        assert parallel_code == """for(int new_i = 3; new_i <= M + 2 * N - 3; new_i += 1) {
+        assert parallel_code == """for(int new_i = 3; new_i <= M + 2 * N - 3; new_i++) {
     #pragma omp parallel for
-    for(int new_j = fmax(1, ceil((1.0 / 2.0) * (-M + new_i + 1))); new_j <= fmin(N - 1, floor((1.0 / 2.0) * (new_i - 1))); new_j += 1) {
+    for(int new_j = fmax(1, ceil((1.0 / 2.0) * (-M + new_i + 1))); new_j <= fmin(N - 1, floor((1.0 / 2.0) * (new_i - 1))); new_j++) {
         int i = new_j;
         int j = new_i - 2 * new_j;
         a[j] = (a[j - 1] + a[j] + a[j + 1]) / 3.0;
@@ -136,10 +136,10 @@ class TestPseudocodeForLoopParserToCCodeGenerator():
         """
         parallel_code = self._pipeline_parser_scheduler(code)
         print(parallel_code)
-        assert parallel_code == """for(int new_i = 4; new_i <= L + M + 2 * N - 6; new_i += 1) {
+        assert parallel_code == """for(int new_i = 4; new_i <= L + M + 2 * N - 6; new_i++) {
     #pragma omp parallel for
-    for(int new_j = fmax(1, ceil((1.0 / 2.0) * (-L - M + new_i + 4))); new_j <= fmin(N - 1, floor((1.0 / 2.0) * (new_i - 2))); new_j += 1) {
-        for(int new_k = fmax(1, -M + new_i - 2 * new_j + 2); new_k <= fmin(L - 2, new_i - 2 * new_j - 1); new_k += 1) {
+    for(int new_j = fmax(1, ceil((1.0 / 2.0) * (-L - M + new_i + 4))); new_j <= fmin(N - 1, floor((1.0 / 2.0) * (new_i - 2))); new_j++) {
+        for(int new_k = fmax(1, -M + new_i - 2 * new_j + 2); new_k <= fmin(L - 2, new_i - 2 * new_j - 1); new_k++) {
             int i = new_j;
             int j = new_i - 2 * new_j - new_k;
             int k = new_k;

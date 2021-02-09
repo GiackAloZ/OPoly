@@ -43,7 +43,8 @@ class CCodeGenerator(CodeGenerator):
 
     def generate_for_loop(self, stmt: ForLoopStatement, level=0) -> str:
         omp_directive = (self.INDENTATION_SPACES * level) + "#pragma omp parallel for\n" if stmt.is_parallel else ""
-        head = (self.INDENTATION_SPACES * level) + f"for(int {stmt.index} = {stmt.lowerbound}; {stmt.index} <= {stmt.upperbound}; {stmt.index} += {stmt.step}) " + "{\n"
+        step = f"{stmt.index}++" if stmt.step.is_constant() and stmt.step.value == 1 else f"{stmt.index} += {stmt.step}"
+        head = (self.INDENTATION_SPACES * level) + f"for(int {stmt.index} = {stmt.lowerbound}; {stmt.index} <= {stmt.upperbound}; {step}) " + "{\n"
         body = f"\n".join([self.generate(t, level=level+1) for t in stmt.body])
         return omp_directive + head + body + "\n" + (self.INDENTATION_SPACES * level) + "}"
 
