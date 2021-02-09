@@ -31,7 +31,7 @@ class TestPseudocodeForLoopParserToLamportReindexer():
         assert reindexed_loop is not None
 
     def test_2d_loop_example2(self):
-        code = "FOR i FROM 1 TO N-1 { FOR j FROM 2 TO M-1 { VAR a[j] = (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
+        code = "FOR i FROM 1 TO N-1 { FOR j FROM 1 TO M-1 { VAR a[j] = (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
         reindexed_loop = self._pipeline_parser_scheduler(code)
         assert reindexed_loop is not None
 

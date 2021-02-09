@@ -3,7 +3,7 @@ import sympy as sp
 from sympy.solvers.inequalities import reduce_inequalities
 
 from opoly.expressions import ConstantExpression, VariableExpression
-from opoly.statements import ForLoopStatement
+from opoly.statements import ForLoopStatement, DeclarationStatement
 from opoly.modules.checker import (
     extract_loop_indexes,
     extract_loop_bounds,
@@ -127,6 +127,17 @@ def invert_integer_matrix(mat: np.ndarray):
 
 class LamportReindexer():
 
+    def generate_reversed_index_declarations(self, old_indexes, new_indexes, inverted_allocation):
+        declarations = []
+        inverted_indexes = inverted_allocation * new_indexes
+        for i, old_idx in enumerate(old_indexes):
+            declarations.append(DeclarationStatement(
+                var_type="int",
+                variable=old_idx,
+                initialization=parse_expression(sp.ccode(inverted_indexes[i]))[0]
+            ))
+        return tuple(declarations)
+
     def extract_bounds(self, bounds):
         res = []
         for b in bounds:
@@ -140,14 +151,17 @@ class LamportReindexer():
         return sp.Matrix(res)
 
     def reindex(self, loop: ForLoopStatement, allocation: np.ndarray) -> ForLoopStatement:
+        old_indexes = extract_loop_indexes(loop)
+        new_indexes = list(VariableExpression("new_" + i.name) for i in old_indexes) #pylint: disable=no-member
         indexes = sp.Matrix(list(
-            [sp.var(i.name) for i in extract_loop_indexes(loop)] # pylint: disable=no-member
+            [sp.var(i.name) for i in new_indexes]
         ))
+        inverted_allocation = invert_integer_matrix(allocation)
         lower_bounds, upper_bounds = list(zip(*extract_loop_bounds(loop)))
         ls = self.extract_bounds(lower_bounds)
         us = self.extract_bounds(upper_bounds)
         new_bounds = reindex(
-            invert_integer_matrix(allocation),
+            inverted_allocation,
             indexes,
             ls,
             us
@@ -155,18 +169,23 @@ class LamportReindexer():
         statements = get_inner_loop_statements(loop)
         last_loop = None
 
-        for i in reversed(indexes):
-            lb, _ = parse_expression(sp.ccode(new_bounds[i][0]))
-            ub, _ = parse_expression(sp.ccode(new_bounds[i][1]))
+        for new_idx in reversed(indexes):
+            lb, _ = parse_expression(sp.ccode(new_bounds[new_idx][0]))
+            ub, _ = parse_expression(sp.ccode(new_bounds[new_idx][1]))
 
             if last_loop is None:
-                body = statements
+                reverse_declarations = self.generate_reversed_index_declarations(
+                    old_indexes,
+                    indexes,
+                    inverted_allocation
+                )
+                body = tuple(list(reverse_declarations) + list(statements))
             else:
-                body = [last_loop]
+                body = (last_loop,)
             
             last_loop = ForLoopStatement(
                 body=body,
-                index=VariableExpression(repr(i)),
+                index=VariableExpression(repr(new_idx)),
                 lowerbound=lb,
                 upperbound=ub
             )
