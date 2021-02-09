@@ -5,13 +5,13 @@ from opoly.modules.checker import LamportForLoopChecker
 class TestPseudocodeForLoopParserToLamportChecker():
 
     def test_1d_loop(self):
-        code = "FOR i FROM 0 TO N { VAR a[i]=a[i+1]; }"
+        code = "FOR i FROM 0 TO N { STM a[i]=a[i+1]; }"
         loop, _ = PseudocodeForLoopParser().parse_for_loop(code)
         res, _ = LamportForLoopChecker().check(loop)
         assert res
 
     def test_2d_loop(self):
-        code = "FOR i FROM 1 TO N-1 { FOR j FROM 2 TO M-1 { VAR a[j] = (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
+        code = "FOR i FROM 1 TO N-1 { FOR j FROM 2 TO M-1 { STM a[j] = (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
         loop, _ = PseudocodeForLoopParser().parse_for_loop(code)
         res, _ = LamportForLoopChecker().check(loop)
         assert res
@@ -21,8 +21,8 @@ class TestPseudocodeForLoopParserToLamportChecker():
             FOR i FROM 1 TO N {
                 FOR j FROM 2 TO M-2 {
                     FOR k FROM 2 TO L-2 {
-                        VAR a[j][k] = (a[j-1][k-1] + a[j][k] + a[j+1][k+1]) / 3.0;
-                        VAR a[j+2][k+2] = a[j][k];
+                        STM a[j][k] = (a[j-1][k-1] + a[j][k] + a[j+1][k+1]) / 3.0;
+                        STM a[j+2][k+2] = a[j][k];
                     }
                 }
             }
@@ -34,12 +34,12 @@ class TestPseudocodeForLoopParserToLamportChecker():
     def test_not_perfectly_nested_loop(self):
         code = """
         FOR i FROM 0 TO N {
-            VAR a[i][0] = 0;
+            STM a[i][0] = 0;
             FOR j FROM 1 TO M-1 {
-                VAR a[i][j] = a[i][j-1] + a[i][j+1];
-                VAR a[j][j] = 0;
+                STM a[i][j] = a[i][j-1] + a[i][j+1];
+                STM a[j][j] = 0;
             }
-            VAR a[N][M] = a[0][0];
+            STM a[N][M] = a[0][0];
         }
         """
         loop, _ = PseudocodeForLoopParser().parse_for_loop(code)
@@ -51,7 +51,7 @@ class TestPseudocodeForLoopParserToLamportChecker():
         code = """
         FOR i FROM 0 TO N {
             FOR j FROM i TO M {
-                VAR a = b;
+                STM a = b;
             }
         }
         """

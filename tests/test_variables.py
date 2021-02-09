@@ -17,7 +17,7 @@ class TestSimpleVariableOccurrence():
                 ("j", -1)
             )
         )
-        assert str(occ) == "[GEN] VAR a[i+0][j-1]"
+        assert str(occ) == "[GEN] STM a[i+0][j-1]"
 
     def test_indexes_names(self):
         occ = SimpleVariableOccurrence(

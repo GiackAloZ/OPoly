@@ -212,7 +212,7 @@ class PseudocodeForLoopParser(ABC):
     )
 
     ASSIGNMENT_REGEX = re.compile(
-        r"^VAR\s+(?P<ass>.*?\s*=\s*.*?);.*"
+        r"^STM\s+(?P<ass>.*?\s*=\s*.*?);.*"
     )
 
     def parse_loop_body(self, code: str) -> (tuple[Statement], str):

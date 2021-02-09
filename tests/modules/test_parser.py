@@ -261,7 +261,7 @@ class TestParsingFunctions():
 class TestPseudocodeForLoopParser():
 
     def test_simple_parse_loop_body(self):
-        code = "VAR a[i] = a[i+1];"
+        code = "STM a[i] = a[i+1];"
         stmts, err = PseudocodeForLoopParser().parse_loop_body(code)
         print(err)
         assert stmts is not None
@@ -269,7 +269,7 @@ class TestPseudocodeForLoopParser():
         assert str(stmts[0]) == "a[i] = a[i + 1]"
 
     def test_long_parse_loop_body(self):
-        code = "VAR a = 10;\nVAR b = a;\nVAR c[x] = a+b;"
+        code = "STM a = 10;\nSTM b = a;\nSTM c[x] = a+b;"
         stmts, err = PseudocodeForLoopParser().parse_loop_body(code)
         print(err)
         assert stmts is not None
@@ -279,7 +279,7 @@ class TestPseudocodeForLoopParser():
         assert str(stmts[2]) == "c[x] = a + b"
 
     def test_parse_1d_loop(self):
-        code = "FOR i FROM 0 TO n { VAR a[i]=a[i+1]; }"
+        code = "FOR i FROM 0 TO n { STM a[i]=a[i+1]; }"
         loop, err = PseudocodeForLoopParser().parse_for_loop(code)
         print(err)
         assert loop is not None
@@ -291,7 +291,7 @@ class TestPseudocodeForLoopParser():
         assert str(loop.body[0]) == "a[i] = a[i + 1]"
 
     def test_parse_plain_nested_2d_loop(self):
-        code = "FOR i FROM 1 TO N - 1 STEP 1 { FOR j FROM 2 TO M-1 { VAR a[j] = (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
+        code = "FOR i FROM 1 TO N - 1 STEP 1 { FOR j FROM 2 TO M-1 { STM a[j] = (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
         loop, err = PseudocodeForLoopParser().parse_for_loop(code)
         print(err)
         assert loop is not None
@@ -311,7 +311,7 @@ class TestPseudocodeForLoopParser():
             inner_loop.body[0]) == "a[j] = (a[j - 1] + a[j] + a[j + 1]) / 3.0"
 
     def test_wrong_inner_loop(self):
-        code = "FOR i FROM 1 TO N - 1 STEP 1 { FOR j FROM 2 TO M { VAR a[j] == (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
+        code = "FOR i FROM 1 TO N - 1 STEP 1 { FOR j FROM 2 TO M { STM a[j] == (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
         loop, err = PseudocodeForLoopParser().parse_for_loop(code)
         assert loop is None
 
@@ -334,17 +334,17 @@ class TestPseudocodeForLoopParser():
         assert loop is None
 
     def test_wrong_lowerbound(self):
-        code = "FOR i FROM 2**2 TO N {VAR a = 1;}"
+        code = "FOR i FROM 2**2 TO N {STM a = 1;}"
         loop, err = PseudocodeForLoopParser().parse_for_loop(code)
         assert loop is None
 
     def test_wrong_upperbound(self):
-        code = "FOR i FROM 1 TO N//2 {VAR a = 1;}"
+        code = "FOR i FROM 1 TO N//2 {STM a = 1;}"
         loop, err = PseudocodeForLoopParser().parse_for_loop(code)
         assert loop is None
 
     def test_wrong_step(self):
-        code = "FOR i FROM 1 TO N/2 STEP 2**2 {VAR a = 1;}"
+        code = "FOR i FROM 1 TO N/2 STEP 2**2 {STM a = 1;}"
         loop, err = PseudocodeForLoopParser().parse_for_loop(code)
         assert loop is None
 
@@ -356,12 +356,12 @@ class TestPseudocodeForLoopParser():
     def test_complex_loop(self):
         code = """
         FOR i FROM 0 TO N {
-            VAR a[i][0] = 0;
+            STM a[i][0] = 0;
             FOR j FROM 1 TO M-1 {
-                VAR a[i][j] = a[i][j-1] + a[i][j+1];
-                VAR a[j][j] = 0;
+                STM a[i][j] = a[i][j-1] + a[i][j+1];
+                STM a[j][j] = 0;
             }
-            VAR a[N][M] = a[0][0];
+            STM a[N][M] = a[0][0];
         }
         """
         loop, err = PseudocodeForLoopParser().parse_for_loop(code)

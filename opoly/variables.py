@@ -27,7 +27,7 @@ class VariableOccurrence(ABC):
             VariableOccurrenceType.GENERATION: "GEN",
             VariableOccurrenceType.USE: "USE",
         }
-        return f"[{vtype_str[self.vtype]}] VAR {self.name}"
+        return f"[{vtype_str[self.vtype]}] STM {self.name}"
 
     def __str__(self):
         return self.stringify()

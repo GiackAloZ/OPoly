@@ -17,17 +17,17 @@ class TestPseudocodeForLoopParserToLamportCPScheduler():
         return schedule
 
     def test_1d_loop(self):
-        code = "FOR i FROM 0 TO N { VAR a[i]=a[i+1]; }"
+        code = "FOR i FROM 0 TO N { STM a[i]=a[i+1]; }"
         schedule = self._pipeline_parser_scheduler(code)
         assert schedule.tolist() == [1]
 
     def test_2d_loop_example1(self):
-        code = "FOR i FROM 1 TO N-1 { FOR j FROM 1 TO M-1 { VAR a[i][j] = (a[i-1][j] + a[i][j] + a[i][j-1]) / 3.0; } }"
+        code = "FOR i FROM 1 TO N-1 { FOR j FROM 1 TO M-1 { STM a[i][j] = (a[i-1][j] + a[i][j] + a[i][j-1]) / 3.0; } }"
         schedule = self._pipeline_parser_scheduler(code)
         assert schedule.tolist() == [1, 1]
 
     def test_2d_loop_example2(self):
-        code = "FOR i FROM 1 TO N-1 { FOR j FROM 2 TO M-1 { VAR a[j] = (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
+        code = "FOR i FROM 1 TO N-1 { FOR j FROM 2 TO M-1 { STM a[j] = (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
         schedule = self._pipeline_parser_scheduler(code)
         assert schedule.tolist() == [2, 1]
 
@@ -36,7 +36,7 @@ class TestPseudocodeForLoopParserToLamportCPScheduler():
         FOR i FROM 1 TO N-1 {
             FOR j FROM 1 TO M-2 {
                 FOR k FROM 1 TO L-2 {
-                    VAR u[j][k] = (u[j+1][k] + u[j][k+1] + u[j-1][k] + u[j][k-1]) * 0.25;
+                    STM u[j][k] = (u[j+1][k] + u[j][k+1] + u[j-1][k] + u[j][k-1]) * 0.25;
                 }
             }
         }
