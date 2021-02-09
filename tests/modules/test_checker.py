@@ -1,4 +1,4 @@
-from opoly.statements import ForLoopStatement, AssignmentStatement, BlockStatement
+from opoly.statements import ForLoopStatement, AssignmentStatement, DeclarationStatement, BlockStatement
 from opoly.expressions import VariableExpression, ConstantExpression, Expression, GroupingExpression
 
 from opoly.modules.checker import is_perfectly_nested_loop, is_plain_loop, is_recursively_plain_loop, LamportForLoopChecker
@@ -283,6 +283,19 @@ class TestLamportForLoopChecker():
         res, error = LamportForLoopChecker().check(outer_loop)
         assert not res
         assert error == "Not all index names in loop are distinct!"
+
+    def test_not_all_assigments(self):
+        loop = ForLoopStatement(
+            body=[DeclarationStatement(var_type="int", variable=VariableExpression("x")),
+                  AssignmentStatement(VariableExpression("a", [VariableExpression("i")]),
+                                      VariableExpression("b", [VariableExpression("i")]))],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=VariableExpression("N")
+        )
+        res, error = LamportForLoopChecker().check(loop)
+        assert not res
+        assert error == "Not all statements in loop body are assignments!"
 
     def test_not_all_left_variables(self):
         loop = ForLoopStatement(
