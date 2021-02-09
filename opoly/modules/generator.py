@@ -15,7 +15,8 @@ class PseudoCodeGenerator(CodeGenerator):
     INDENTATION_SPACES = " " * 4
 
     def generate_for_loop(self, stmt: ForLoopStatement, level=0) -> str:
-        head = f"FOR {stmt.index} FROM {stmt.lowerbound} TO {stmt.upperbound} STEP {stmt.step} " + "{\n"
+        conc = f" CONC" if stmt._is_parallel else ""
+        head = f"FOR{conc} {stmt.index} FROM {stmt.lowerbound} TO {stmt.upperbound} STEP {stmt.step} " + "{\n"
         body = f"\n".join([self.generate(t, level=level+1) for t in stmt.body])
         return (self.INDENTATION_SPACES * level) + head + body + "\n" + (self.INDENTATION_SPACES * level) + "}"
 
@@ -41,9 +42,10 @@ class CCodeGenerator(CodeGenerator):
     INDENTATION_SPACES = " " * 4
 
     def generate_for_loop(self, stmt: ForLoopStatement, level=0) -> str:
-        head = f"for(int {stmt.index} = {stmt.lowerbound}; {stmt.index} <= {stmt.upperbound}; {stmt.index} += {stmt.step}) " + "{\n"
+        omp_directive = (self.INDENTATION_SPACES * level) + "#pragma omp parallel for\n" if stmt.is_parallel else ""
+        head = (self.INDENTATION_SPACES * level) + f"for(int {stmt.index} = {stmt.lowerbound}; {stmt.index} <= {stmt.upperbound}; {stmt.index} += {stmt.step}) " + "{\n"
         body = f"\n".join([self.generate(t, level=level+1) for t in stmt.body])
-        return (self.INDENTATION_SPACES * level) + head + body + "\n" + (self.INDENTATION_SPACES * level) + "}"
+        return omp_directive + head + body + "\n" + (self.INDENTATION_SPACES * level) + "}"
 
     def generate_declaration(self, stmt: DeclarationStatement, level=0) -> str:
         head = f"{stmt.var_type} {stmt.variable}"

@@ -169,7 +169,7 @@ class LamportReindexer():
         statements = get_inner_loop_statements(loop)
         last_loop = None
 
-        for new_idx in reversed(indexes):
+        for i, new_idx in reversed(list(enumerate(indexes))):
             lb, _ = parse_expression(sp.ccode(new_bounds[new_idx][0]))
             ub, _ = parse_expression(sp.ccode(new_bounds[new_idx][1]))
 
@@ -187,6 +187,7 @@ class LamportReindexer():
                 body=body,
                 index=VariableExpression(repr(new_idx)),
                 lowerbound=lb,
-                upperbound=ub
+                upperbound=ub,
+                is_parallel=(i == 1)
             )
         return last_loop

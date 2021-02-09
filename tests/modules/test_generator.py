@@ -65,7 +65,8 @@ class TestPseudoCodeGenerator():
             ],
             index=VariableExpression("j"),
             lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("M")
+            upperbound=VariableExpression("M"),
+            is_parallel=True
         )
         outer_loop = ForLoopStatement(
             body=[inner_loop],
@@ -74,7 +75,7 @@ class TestPseudoCodeGenerator():
             upperbound=VariableExpression("N")
         )
         code = PseudoCodeGenerator().generate(outer_loop)
-        assert code == "FOR i FROM 1 TO N STEP 1 {\n    FOR j FROM 1 TO M STEP 1 {\n        VAR x = 1;\n        STM a[j] = x + 1;\n    }\n}"
+        assert code == "FOR i FROM 1 TO N STEP 1 {\n    FOR CONC j FROM 1 TO M STEP 1 {\n        VAR x = 1;\n        STM a[j] = x + 1;\n    }\n}"
 
 
 class TestCCodeGenerator():
@@ -139,7 +140,8 @@ class TestCCodeGenerator():
             ],
             index=VariableExpression("j"),
             lowerbound=ConstantExpression(1),
-            upperbound=VariableExpression("M")
+            upperbound=VariableExpression("M"),
+            is_parallel=True
         )
         outer_loop = ForLoopStatement(
             body=[inner_loop],
@@ -148,4 +150,4 @@ class TestCCodeGenerator():
             upperbound=VariableExpression("N")
         )
         code = CCodeGenerator().generate(outer_loop)
-        assert code == "for(int i = 1; i <= N; i += 1) {\n    for(int j = 1; j <= M; j += 1) {\n        int x = 1;\n        a[j] = x + 1;\n    }\n}"
+        assert code != "for(int i = 1; i <= N; i += 1) {\n    #pragma omp parallel for\n    for(int j = 1; j <= M; j += 1) {\n        int x = 1;\n        a[j] = x + 1;\n    }\n}"

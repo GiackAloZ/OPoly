@@ -60,19 +60,19 @@ class DeclarationStatement(Statement):
         self._var_type = var_type
         self._variable = variable
         self._initialization = initialization
-    
+
     @property
     def var_type(self) -> str:
         return self._var_type
-    
+
     @property
     def variable(self) -> VariableExpression:
         return self._variable
-    
+
     @property
     def initialization(self) -> Expression:
         return self._initialization
-    
+
     def stringify(self) -> str:
         decl_str = f"{self.var_type} {str(self.variable)}"
         init_str = f" = {str(self.initialization)}" if self.initialization is not None else ""
@@ -108,13 +108,15 @@ class ForLoopStatement(BlockStatement):
                  index: VariableExpression,
                  lowerbound: Expression,
                  upperbound: Expression,
-                 step: Expression = ConstantExpression(1)
+                 step: Expression = ConstantExpression(1),
+                 is_parallel: bool = False
                  ):
         super().__init__(StatementType.FOR_LOOP, body)
         self._index = index
         self._lowerbound = lowerbound
         self._upperbound = upperbound
         self._step = step
+        self._is_parallel = is_parallel
 
     @property
     def index(self) -> VariableExpression:
@@ -131,6 +133,10 @@ class ForLoopStatement(BlockStatement):
     @property
     def step(self) -> Expression:
         return self._step
+    
+    @property
+    def is_parallel(self) -> bool:
+        return self._is_parallel
 
     def stringify_head(self) -> str:
         head = f"FOR {self.index} = {self.lowerbound}...{self.upperbound}"
