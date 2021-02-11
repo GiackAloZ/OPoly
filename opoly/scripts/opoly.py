@@ -73,9 +73,12 @@ def opoly(
         generator = CCodeGenerator() if out_format == "CCODE" else PseudoCodeGenerator()
         new_code = generator.generate(loop)
 
-        logger.debug("Writing output file")
-        with open(output_file, "w") as file:
-            file.write(new_code)
+        if output_file is None:
+            print(new_code)
+        else:
+            logger.debug("Writing output file")
+            with open(output_file, "w") as file:
+                file.write(new_code)
 
     except Exception as ex:
         logger.error(f"An unexpected error as occourred: {ex}")
