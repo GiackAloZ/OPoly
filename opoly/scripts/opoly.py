@@ -14,7 +14,7 @@ from opoly.modules.reindexer import LamportReindexer
 from opoly.modules.generator import CCodeGenerator, PseudoCodeGenerator
 
 
-def opoly_compile(
+def opoly(
     input_file: pathlib.Path,
     output_file: pathlib.Path = None,
     out_format: str = "CCODE",
@@ -32,68 +32,50 @@ def opoly_compile(
     try:
         logger.debug("Reading input file")
         with open(input_file, "r") as file:
-            input_code = file.read()
+            code = file.read()
 
-        logger.debug("Scanning input file")
-        omp_poly_dir_regex = re.compile(
-            r"#pragma\s+omp\s+parallel\s+poly(?P<code>(.|\s)*?)#pragma\s+end")
-        last_pos = 0
-        code_list = []
-        matches = []
-        while True:
-            match = omp_poly_dir_regex.search(input_code, pos=last_pos)
-            if match is None:
-                break
-            code_list.append(match.group("code"))
-            logger.info(
-                f"Found code #{len(code_list)}: " + match.group("code"))
-            matches.append(match)
-            last_pos = match.end()+1
-
-        if len(matches) == 0:
-            logging.warning("No code found. Aborting")
+        logger.debug("Parsing code")
+        loop, err = PseudocodeForLoopParser().parse_for_loop(code)
+        if loop is None:
+            logger.error("Error while parsing code: " + err)
             return
 
-        new_loops = []
-        for i, code in enumerate(code_list):
-            logger.info(f"Processing code #{i+1}")
-            logger.debug("Parsing code")
-            loop, err = PseudocodeForLoopParser().parse_for_loop(code)
-            if loop is None:
-                logger.error(f"Error while parsing code #{i+1}: " + err)
-                return
-            logger.debug("Checking code")
-            ok, err = LamportForLoopChecker().check(loop)
-            if not ok:
-                logger.error(f"Error while checking code #{i+1}: " + err)
-                return
-            logger.debug("Detecting dependencies")
-            deps = LamportLoopDependenciesDetector().extract_dependencies(loop)
-            if len(deps) == 0:
-                logger.warning(
-                    f"No dependecies found for code #{i+1}. Skipping optimization")
-            else:
-                deps_np = np.array(list(list(d.converted_values)
-                                        for d in deps))
-                logger.debug("Scheduling loop")
-                schedule, err = LamportCPScheduler().schedule(deps_np)
-                if schedule is None:
-                    logger.error(f"Error while scheduling loop #{i+1}: " + err)
-                    return
-                logger.debug("Allocating loop")
-                allocation, err = LamportCPAllocator().allocate(schedule)
-                if allocation is None:
-                    logger.error(f"Error while allocating loop #{i+1}: " + err)
-                    return
-                logger.debug("Reindexing loop")
-                loop = LamportReindexer().reindex(loop, allocation)
-            logger.debug("Generating code")
-            generator = CCodeGenerator() if out_format == "CCODE" else PseudoCodeGenerator()
-            new_loop_code = generator.generate(loop)
-            new_loops.append(new_loop_code)
-            logger.debug(f"Loop #{i+1} done")
+        logger.debug("Checking code")
+        ok, err = LamportForLoopChecker().check(loop)
+        if not ok:
+            logger.error("Error while checking code: " + err)
+            return
 
-        # TODO replace old code with new code
+        logger.debug("Detecting code dependencies")
+        deps = LamportLoopDependenciesDetector().extract_dependencies(loop)
+        if len(deps) == 0:
+            logger.warning(
+                "No dependecies found in code. Skipping optimization")
+        else:
+            deps_np = np.array(list(list(d.converted_values)
+                                    for d in deps))
+
+            logger.debug("Scheduling loop")
+            schedule, err = LamportCPScheduler().schedule(deps_np)
+            if schedule is None:
+                logger.error("Error while scheduling loop: " + err)
+                return
+
+            logger.debug("Allocating loop")
+            allocation, err = LamportCPAllocator().allocate(schedule)
+            if allocation is None:
+                logger.error("Error while allocating loop: " + err)
+                return
+
+            logger.debug("Reindexing loop")
+            loop = LamportReindexer().reindex(loop, allocation, separate_bounds=out_format == "CCODE")
+        logger.debug("Generating code")
+        generator = CCodeGenerator() if out_format == "CCODE" else PseudoCodeGenerator()
+        new_code = generator.generate(loop)
+
+        logger.debug("Writing output file")
+        with open(output_file, "w") as file:
+            file.write(new_code)
 
     except Exception as ex:
         logger.error(f"An unexpected error as occourred: {ex}")
@@ -127,7 +109,7 @@ def main():
         help="make output verbose"
     )
     args = argument_parser.parse_args()
-    opoly_compile(
+    opoly(
         args.file,
         args.output,
         args.format,

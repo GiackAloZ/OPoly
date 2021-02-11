@@ -150,7 +150,7 @@ class LamportReindexer():
                 res.append(sp.var(v.name) + c.value)
         return sp.Matrix(res)
 
-    def reindex(self, loop: ForLoopStatement, allocation: np.ndarray) -> ForLoopStatement:
+    def reindex(self, loop: ForLoopStatement, allocation: np.ndarray, separate_bounds: bool = False) -> ForLoopStatement:
         old_indexes = extract_loop_indexes(loop)
         new_indexes = list(VariableExpression("new_" + i.name) for i in old_indexes) #pylint: disable=no-member
         indexes = sp.Matrix(list(
@@ -167,8 +167,9 @@ class LamportReindexer():
             us
         )
         statements = get_inner_loop_statements(loop)
-        last_loop = None
 
+        last_loop = None
+        last_bounds = None
         for i, new_idx in reversed(list(enumerate(indexes))):
             lb, _ = parse_expression(sp.ccode(new_bounds[new_idx][0]))
             ub, _ = parse_expression(sp.ccode(new_bounds[new_idx][1]))
@@ -179,12 +180,31 @@ class LamportReindexer():
                     indexes,
                     inverted_allocation
                 )
-                body = tuple(list(reverse_declarations) + list(statements))
+                body = list(reverse_declarations) + list(statements)
             else:
-                body = (last_loop,)
+                body = [last_loop]
+            
+            if last_bounds is not None:
+                body = last_bounds + body
+            
+            if i >= 1 and separate_bounds:
+                lb_decl = DeclarationStatement(
+                    var_type="int",
+                    variable=VariableExpression(new_indexes[i].name + "_lb"),
+                    initialization=lb
+                )
+                ub_decl = DeclarationStatement(
+                    var_type="int",
+                    variable=VariableExpression(new_indexes[i].name + "_ub"),
+                    initialization=ub
+                )
+                lb = lb_decl.variable
+                ub = ub_decl.variable
+                last_bounds = [lb_decl, ub_decl]
+
             
             last_loop = ForLoopStatement(
-                body=body,
+                body=tuple(body),
                 index=VariableExpression(repr(new_idx)),
                 lowerbound=lb,
                 upperbound=ub,
