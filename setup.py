@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="opoly", # Replace with your own username
-    version="0.0.1",
+    version="0.1.0",
     author="Giacomo Aloisi (GiackAloZ)",
     author_email="giacomo.aloisi1998@gmail.com",
     description="OPoly: a simple OpenMP polyhedral compilator",
@@ -23,6 +23,9 @@ setuptools.setup(
     ],
     keywords="compiler polyhedral optimization parallel omp c",
     packages=setuptools.find_packages(),
+    package_data={
+        "opoly.modules.minizinc": ["models/*.mzn"],
+    },
     install_requires=[
         "numpy>=1.19",
         "sympy>=1.7",

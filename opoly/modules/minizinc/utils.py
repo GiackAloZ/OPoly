@@ -17,8 +17,8 @@ def solve_model(
             solver=solver,
             timeout=timeout
         )
-    except:
-        return None, "An error occurred!"
+    except Exception as ex:
+        return None, f"An error occurred!\n{ex}"
     if sols.status in (pymzn.Status.UNKNOWN, pymzn.Status.INCOMPLETE):
         return None, "Solution not found in time!"
     if sols.status == pymzn.Status.UNSATISFIABLE:
