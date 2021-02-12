@@ -140,7 +140,7 @@ where:
 - *ub_expr* is an expression representing the last value of the index variable. There are 3 possible kind of expression that can be written:
     - a positive constant integer
     - a parameter name
-    - a two-term expression with a parameter name, an operator (`+` or `-`) and a constant expression (eg. `n-2`).
+    - a two-term expression with a parameter name, an operator (`+` or `-`) and a constant integer (eg. `n-2`).
 - *loop_body* are other statements (possibly for loops) contained in the loop body. If there are nested loops, the loops must be perfectly nested, which means that no other statements must be present in the loop body containing another for loop.
 
 *NOTE*: each index variable name must be unique for every for loop.
@@ -166,10 +166,10 @@ where:
 
 For example, a correct vector expression is `a[i+1][j-1]` and an incorrect vector expression is `a[i+j][j]` because `i` and `j` are both present in the first dimension index of the vector.
 
-Also, if vectors with the same name cannot be indexed with different index variables or in different order. For example, if `x[i][j]` is present, `x[j][i]` cannot be present as well as `x[i]`.
+Also, vectors with the same name cannot be indexed with different index variables or in different order. For example, if `x[i][j]` is present, `x[j][i]` cannot be present as well as `x[i]`.
 
 \
-A general expression is a list of other expression with an operator in between each of them. For example, `a + 1` is an expression of two terms `a` and `1` with an operator `+` in between them. In general, an expression can be described by the following syntax:
+A general expression is a list of other expression with an operator between each of them. For example, `a + 1` is an expression of two terms `a` and `1` with an operator `+` in between them. In general, an expression can be described by the following syntax:
 
 > *expr* [*op* *other_expr*]...
 
