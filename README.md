@@ -35,11 +35,32 @@ python setup.py install
 
 ## Usage
 
-After installing OPoly, you will have access to the command line tool `opoly`. This script reads a file containing code that needs to be parallelized. The code must be given in a properly formatted, pseudocode language that will be described later in this section.
+After installing OPoly, you will have access to the command line tool `opoly`. This script reads a file containing code that needs to be parallelized. The code must be given in a properly formatted, pseudocode language that will be described later.
 
 The script will parse this file, detect the loop-carried dependencies and perform the polyhedral optimization using the method described by Lamport in his famous article [*The Parallel Execution of DO Loops*](https://www.microsoft.com/en-us/research/uploads/prod/2016/12/The-Parallel-Execution-of-DO-Loops.pdf).
 
 The script will then generate the parallelized version of the code in the same pseudocode language or in C syntax, adding OpenMP directives where needed.
+
+Suppose that the file containing the input code is named `example1.psc`, then the command required to generate the parallel code is:
+```
+opoly example1.psc
+```
+By default, `opoly` will output in the standard output the generated code in C syntax (with OMP directives).
+To output the code in pseudocode syntax, one can use the `-f` or `--format` option to specify the format of the resulting code to `PSEUDO`:
+```
+opoly example1.psc -f PSEUDO
+```
+The `-o` or `--output` argument can be used to specify a custom file in which the resulting code should be written, instead of the standard output:
+```
+opoly example1.psc -o omp-example1.c
+```
+
+For more information about the `opoly` command line tool, read the help with:
+```
+opoly -h
+```
+
+## Description
 
 The most common usage of the `opoly` tool is to read a file containing the nested loop(s) that needs to be parallelized. Let's say that the file contains this code:
 ```
@@ -79,7 +100,7 @@ The statement that perform the computation remains unchanged.
 There are a few functions in the loop range that compute the maximum (`fmax`), minimum (`fmin`), ceiling (`ceil`) and floor (`floor`) of their arguments.
 
 `opoly` can also rewrite the code in C syntax and add OMP directives to perform parallel loops. The C version of the rewritten code is:
-```c
+```c++
 for(int new_k = 3; new_k <= n + 2 * q - 2; new_k++) {
     int new_i_lb = fmax(1, ceil((1.0 / 2.0) * (-n + new_k + 2)));
     int new_i_ub = fmin(q, floor((1.0 / 2.0) * (new_k - 1)));
@@ -93,31 +114,18 @@ for(int new_k = 3; new_k <= n + 2 * q - 2; new_k++) {
 ```
 Notice that the values of the lower and upper bounds of the inner loop are computed before the loop statement in this version. The result is a more readable code, not impacting performance.
 
-Suppose that the file containing the input code is named `example1.psc`, then the command required to generate the parallel code is:
-```
-opoly example1.psc
-```
-By default, `opoly` will output in the standard output the generated code in C syntax (with OMP directives).
-To output the code in pseudocode syntax, one can use the `-f` or `--format` option to specify the format of the resulting code to `PSEUDO`:
-```
-opoly example1.psc -f PSEUDO
-```
-The `-o` or `--output` argument can be used to specify a custom file in which the resulting code should be written, instead of the standard output:
-```
-opoly example1.psc -o omp-example1.c
-```
-
-### Pseudocode syntax
+## Pseudocode syntax
 
 We will now describe the syntax of the pseudocode.
 
 We must first define the difference between indexes, parameters and vectors:
-- an *index* is a for loop index varialbe (eg. `i` or `k` in the examples above).
+- an *index* is a for loop index variable (eg. `i` or `k` in the examples above).
 - a *parameter* is every variable in the program for which the value is know at the time of execution and its value does not change during the execution (eg. `q` or `n` in the examples above).
-- a *vector* is a multi-dimensional variable that appears in assigments and is used to store computation results (eg. `a` in the examples above).
+- a *vector* is a multi-dimensional variable that appears in assigments and it is used to store computation results (eg. `a` in the examples above).
 
 We will discuss more about the restrictions each variable has in order to extract the dependecies and rewrite the loops later in this section.
 
+\
 The for loop statement syntax is:
 
 > **FOR** *var_idx* **FROM** *lb_const* **TO** *ub_expr* {
@@ -137,6 +145,7 @@ where:
 
 *NOTE*: each index variable name must be unique for every for loop.
 
+\
 The assigment statement syntax is:
 
 > **STM** *left_term* **=** *right_term* **;**
@@ -159,6 +168,7 @@ For example, a correct vector expression is `a[i+1][j-1]` and an incorrect vecto
 
 Also, if vectors with the same name cannot be indexed with different index variables or in different order. For example, if `x[i][j]` is present, `x[j][i]` cannot be present as well as `x[i]`.
 
+\
 A general expression is a list of other expression with an operator in between each of them. For example, `a + 1` is an expression of two terms `a` and `1` with an operator `+` in between them. In general, an expression can be described by the following syntax:
 
 > *expr* [*op* *other_expr*]...
@@ -172,4 +182,72 @@ There can be also round brackets `()` around an expression.
 An example of a correct expression is:
 ```
 a + v[i] * (1 - v[i-1]) / 3.0
+```
+
+### Examples
+
+Let's look at a simplified relaxation algorithm also used as an example in [*The Parallel Execution of DO Loops*](https://www.microsoft.com/en-us/research/uploads/prod/2016/12/The-Parallel-Execution-of-DO-Loops.pdf).
+The algorithm takes every point of an input matrix `u` of size `M` by `N` and compute its value as the mean of the adjacent points' value. This computation is done `L` times.
+
+We can describe this algorithm with the following pseudocode:
+```
+FOR i FROM 1 TO L {
+    FOR j FROM 2 TO M-1 {
+        FOR k FROM 2 TO N-1 {
+            STM u[j][k] = (u[j+1][k] + u[j][k+1] + u[j-1][k] + u[j][k-1]) * 0.25;
+        }
+    }
+}
+```
+supposing that the matrix `u` is accessed with one-based index fashion.
+
+If we let `opoly` rewrite this code, we will get this (in C syntax with OMP directives):
+```c++
+for(int new_i = 4; new_i <= 2 * L + M + N - 2; new_i++) {
+    int new_j_lb = fmax(1, ceil((1.0 / 2.0) * (-M - N + new_i + 2)));
+    int new_j_ub = fmin(L, floor((1.0 / 2.0) * (new_i - 2)));
+    #pragma omp parallel for
+    for(int new_j = new_j_lb; new_j <= new_j_ub; new_j++) {
+        int new_k_lb = fmax(1, -M + new_i - 2 * new_j + 1);
+        int new_k_ub = fmin(N - 1, new_i - 2 * new_j - 1);
+        for(int new_k = new_k_lb; new_k <= new_k_ub; new_k++) {
+            int i = new_j;
+            int j = new_i - 2 * new_j - new_k;
+            int k = new_k;
+            u[j][k] = (u[j + 1][k] + u[j][k + 1] + u[j - 1][k] + u[j][k - 1]) * 0.25;
+        }
+    }
+}
+```
+
+\
+Let's look at another example. We have a computation involving three one-dimensional vectors `a`, `b` and `c` that needs to be done `q` times. Each vector is containing `n` values (zero-based indexing). We iterate through each `i` from `1` to `n-2` and we compute the following three statements:
+- firstly, we compute the sum of `b[i+1]` and `c[i]` and assign it to `a[i]`.
+- then, we compute the inverse of `a[i]` and assign it to `a[i-1]`.
+- lastly, we update `b[i]` to the value of `a[i]`
+
+There are a lot of dependecies in this code, but we don't have to worry since `opoly` will do the job of detecting them for us. We only need to write the pseudocode for this algorithm:
+```
+FOR k FROM 1 TO q {
+    FOR i FROM 1 TO n-2 {
+        STM a[i] = b[i+1] + c[i];
+        STM a[i-1] = 1.0 / a[i];
+        STM b[i] = a[i];
+    }
+}
+```
+And the resulting code will be:
+```c++
+for(int new_k = 3; new_k <= n + 2 * q - 2; new_k++) {
+    int new_i_lb = fmax(1, ceil((1.0 / 2.0) * (-n + new_k + 2)));
+    int new_i_ub = fmin(q, floor((1.0 / 2.0) * (new_k - 1)));
+    #pragma omp parallel for
+    for(int new_i = new_i_lb; new_i <= new_i_ub; new_i++) {
+        int k = new_i;
+        int i = -2 * new_i + new_k;
+        a[i] = b[i + 1] + c[i];
+        a[i - 1] = 1.0 / a[i];
+        b[i] = a[i];
+    }
+}
 ```
