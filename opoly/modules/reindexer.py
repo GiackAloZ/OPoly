@@ -138,7 +138,7 @@ class LamportReindexer():
             ))
         return tuple(declarations)
 
-    def extract_bounds(self, bounds):
+    def extract_bounds(self, bounds, old_indexes, inv_indexes):
         res = []
         for b in bounds:
             if b.is_constant():
@@ -147,7 +147,14 @@ class LamportReindexer():
                 res.append(sp.var(b.name))
             else:
                 v, c = get_simple_variable_sum_and_constant(b)
-                res.append(sp.var(v.name) + c.value)
+                found = False
+                for i, oi in enumerate(old_indexes):
+                    if v.name == oi.name:
+                        found = True
+                        res.append(inv_indexes[i] + c.value)
+                        break
+                if not found:
+                    res.append(sp.var(v.name) + c.value)
         return sp.Matrix(res)
 
     def reindex(self, loop: ForLoopStatement, allocation: np.ndarray, separate_bounds: bool = False) -> ForLoopStatement:
@@ -158,8 +165,9 @@ class LamportReindexer():
         ))
         inverted_allocation = invert_integer_matrix(allocation)
         lower_bounds, upper_bounds = list(zip(*extract_loop_bounds(loop)))
-        ls = self.extract_bounds(lower_bounds)
-        us = self.extract_bounds(upper_bounds)
+        inv_indexes = inverted_allocation * indexes
+        ls = self.extract_bounds(lower_bounds, old_indexes, inv_indexes)
+        us = self.extract_bounds(upper_bounds, old_indexes, inv_indexes)
         new_bounds = reindex(
             inverted_allocation,
             indexes,

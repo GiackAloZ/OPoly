@@ -293,3 +293,39 @@ class TestLamportReindexer():
         ])
         reindexed_loop = LamportReindexer().reindex(iloop, allocation)
         assert reindexed_loop is not None
+    
+    def test_2d_indexes(self):
+        aij = VariableExpression(
+            "a", [VariableExpression("i"), VariableExpression("j")])
+        aiminus1j = VariableExpression("a", [Expression([
+            VariableExpression("i"),
+            ConstantExpression(1)],
+            ["-"]),
+            VariableExpression("j")
+        ])
+        aijminus1 = VariableExpression("a", [VariableExpression("i"),
+                                             Expression([
+                                                 VariableExpression("j"),
+                                                 ConstantExpression(1)
+                                             ], ["-"])
+                                             ])
+        inner_loop = ForLoopStatement(
+            body=[AssignmentStatement(aij, Expression([
+                GroupingExpression([aiminus1j, aij, aijminus1], ["+", "+"]),
+                ConstantExpression(3.0)], ["/"]))],
+            index=VariableExpression("j"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression(
+                [VariableExpression("i"), ConstantExpression(2)], "+")
+        )
+        outer_loop = ForLoopStatement(
+            body=[inner_loop],
+            index=VariableExpression("i"),
+            lowerbound=ConstantExpression(1),
+            upperbound=Expression(
+                [VariableExpression("N"), ConstantExpression(1)], "-")
+        )
+        allocation = np.array([[1, 1], [0, 1]])
+        reindexed_loop = LamportReindexer().reindex(outer_loop, allocation)
+        print(reindexed_loop)
+        assert False
