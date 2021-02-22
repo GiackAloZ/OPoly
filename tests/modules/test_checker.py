@@ -1,4 +1,4 @@
-from opoly.statements import ForLoopStatement, AssignmentStatement, DeclarationStatement, BlockStatement
+from opoly.statements import ForLoopStatement, AssignmentStatement, DeclarationStatement
 from opoly.expressions import VariableExpression, ConstantExpression, Expression, GroupingExpression
 
 from opoly.modules.checker import is_perfectly_nested_loop, is_plain_loop, is_recursively_plain_loop, LamportForLoopChecker

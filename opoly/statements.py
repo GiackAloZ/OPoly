@@ -34,8 +34,12 @@ class Statement(ABC):
     def __str__(self):
         return self.stringify()
 
+class SimpleStatement(Statement, ABC):
 
-class AssignmentStatement(Statement):
+    def __init__(self, stype: StatementType):
+        super().__init__(stype)
+
+class AssignmentStatement(SimpleStatement):
 
     def __init__(self, left_term: VariableExpression, right_term: Expression):
         super().__init__(StatementType.ASSIGNMENT)
@@ -54,7 +58,7 @@ class AssignmentStatement(Statement):
         return f"{self.left_term} = {self.right_term}"
 
 
-class DeclarationStatement(Statement):
+class DeclarationStatement(SimpleStatement):
     def __init__(self, var_type: str, variable: VariableExpression, initialization: Expression = None):
         super().__init__(StatementType.DECLARATION)
         self._var_type = var_type
@@ -79,12 +83,12 @@ class DeclarationStatement(Statement):
         return f"{decl_str}{init_str}"
 
 
-class BlockStatement(Statement, ABC):
+class CompoundStatement(Statement, ABC):
 
     def __init__(self, stype: StatementType, body: tuple[Statement]):
         super().__init__(stype)
         if len(body) == 0:
-            raise ValueError("Block statement body cannot be empty!")
+            raise ValueError("Compound statement body cannot be empty!")
         self._body = body
 
     @property
@@ -101,7 +105,7 @@ class BlockStatement(Statement, ABC):
         return "\n".join([head, body])
 
 
-class ForLoopStatement(BlockStatement):
+class ForLoopStatement(CompoundStatement):
 
     def __init__(self,
                  body: tuple[Statement],

@@ -327,5 +327,4 @@ class TestLamportReindexer():
         )
         allocation = np.array([[1, 1], [0, 1]])
         reindexed_loop = LamportReindexer().reindex(outer_loop, allocation)
-        print(reindexed_loop)
-        assert False
+        assert reindexed_loop is not None
