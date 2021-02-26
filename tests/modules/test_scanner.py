@@ -4,8 +4,8 @@ import sympy as sp
 
 from opoly.expressions import Expression, VariableExpression, ConstantExpression, GroupingExpression
 from opoly.statements import AssignmentStatement, ForLoopStatement
-from opoly.modules.reindexer import reindex, invert_integer_matrix
-from opoly.modules.reindexer import LamportReindexer
+from opoly.modules.scanner import reindex, invert_integer_matrix
+from opoly.modules.scanner import FourierMotzkinScanner
 
 
 # @pytest.mark.skip(reason="too slow to test every time")
@@ -161,7 +161,7 @@ class TestReindexerFunctions():
 
 
 # @pytest.mark.skip(reason="too slow to test every time")
-class TestLamportReindexer():
+class TestFourierMotzkinScanner():
 
     def test_1d_identity(self):
         loop = ForLoopStatement(
@@ -172,7 +172,7 @@ class TestLamportReindexer():
             upperbound=VariableExpression("N")
         )
         allocation = np.array([[1]])
-        reindexed_loop = LamportReindexer().reindex(loop, allocation)
+        reindexed_loop = FourierMotzkinScanner().reindex(loop, allocation)
         assert reindexed_loop is not None
 
     def test_1d_identity2(self):
@@ -185,7 +185,7 @@ class TestLamportReindexer():
                 [VariableExpression("N"), ConstantExpression(1)], "-")
         )
         allocation = np.array([[1]])
-        reindexed_loop = LamportReindexer().reindex(loop, allocation)
+        reindexed_loop = FourierMotzkinScanner().reindex(loop, allocation)
         assert reindexed_loop is not None
 
     def test_2d_identity(self):
@@ -203,7 +203,7 @@ class TestLamportReindexer():
             upperbound=VariableExpression("N")
         )
         allocation = np.array([[1, 0], [0, 1]])
-        reindexed_loop = LamportReindexer().reindex(outer_loop, allocation)
+        reindexed_loop = FourierMotzkinScanner().reindex(outer_loop, allocation)
         assert reindexed_loop is not None
 
     def test_2d_example1(self):
@@ -238,7 +238,7 @@ class TestLamportReindexer():
                 [VariableExpression("N"), ConstantExpression(1)], "-")
         )
         allocation = np.array([[1, 1], [0, 1]])
-        reindexed_loop = LamportReindexer().reindex(outer_loop, allocation)
+        reindexed_loop = FourierMotzkinScanner().reindex(outer_loop, allocation)
         assert reindexed_loop is not None
 
     def test_3d_example5(self):
@@ -291,7 +291,7 @@ class TestLamportReindexer():
             [1, 0, 0],
             [0, 0, 1]
         ])
-        reindexed_loop = LamportReindexer().reindex(iloop, allocation)
+        reindexed_loop = FourierMotzkinScanner().reindex(iloop, allocation)
         assert reindexed_loop is not None
     
     def test_2d_indexes(self):
@@ -326,5 +326,5 @@ class TestLamportReindexer():
                 [VariableExpression("N"), ConstantExpression(1)], "-")
         )
         allocation = np.array([[1, 1], [0, 1]])
-        reindexed_loop = LamportReindexer().reindex(outer_loop, allocation)
+        reindexed_loop = FourierMotzkinScanner().reindex(outer_loop, allocation)
         assert reindexed_loop is not None

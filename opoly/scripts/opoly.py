@@ -10,7 +10,7 @@ from opoly.modules.checker import LamportForLoopChecker
 from opoly.modules.detector import LamportLoopDependenciesDetector
 from opoly.modules.scheduler import LamportCPScheduler
 from opoly.modules.allocator import LamportCPAllocator
-from opoly.modules.reindexer import LamportReindexer
+from opoly.modules.scanner import FourierMotzkinScanner
 from opoly.modules.generator import CCodeGenerator, PseudoCodeGenerator
 
 
@@ -68,7 +68,7 @@ def opoly(
                 return
 
             logger.debug("Reindexing loop")
-            loop = LamportReindexer().reindex(loop, allocation, separate_bounds=out_format == "CCODE")
+            loop = FourierMotzkinScanner().reindex(loop, allocation, separate_bounds=out_format == "CCODE")
         logger.debug("Generating code")
         generator = CCodeGenerator() if out_format == "CCODE" else PseudoCodeGenerator()
         new_code = generator.generate(loop)

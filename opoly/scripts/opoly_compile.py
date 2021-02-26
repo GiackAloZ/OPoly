@@ -10,7 +10,7 @@ from opoly.modules.checker import LamportForLoopChecker
 from opoly.modules.detector import LamportLoopDependenciesDetector
 from opoly.modules.scheduler import LamportCPScheduler
 from opoly.modules.allocator import LamportCPAllocator
-from opoly.modules.reindexer import LamportReindexer
+from opoly.modules.scanner import FourierMotzkinScanner
 from opoly.modules.generator import CCodeGenerator, PseudoCodeGenerator
 
 
@@ -86,7 +86,7 @@ def opoly_compile(
                     logger.error(f"Error while allocating loop #{i+1}: " + err)
                     return
                 logger.debug("Reindexing loop")
-                loop = LamportReindexer().reindex(loop, allocation)
+                loop = FourierMotzkinScanner().reindex(loop, allocation)
             logger.debug("Generating code")
             generator = CCodeGenerator() if out_format == "CCODE" else PseudoCodeGenerator()
             new_loop_code = generator.generate(loop)

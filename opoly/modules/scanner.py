@@ -125,7 +125,7 @@ def reindex(T_inv: np.array, x: sp.Matrix, ls: sp.Matrix, us: sp.Matrix):
 def invert_integer_matrix(mat: np.ndarray):
     return np.linalg.inv(mat).round().astype(int)
 
-class LamportReindexer():
+class FourierMotzkinScanner():
 
     def generate_reversed_index_declarations(self, old_indexes, new_indexes, inverted_allocation):
         declarations = []

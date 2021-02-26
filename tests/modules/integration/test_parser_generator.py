@@ -5,7 +5,7 @@ from opoly.modules.checker import LamportForLoopChecker
 from opoly.modules.detector import LamportLoopDependenciesDetector
 from opoly.modules.scheduler import LamportCPScheduler
 from opoly.modules.allocator import LamportCPAllocator
-from opoly.modules.reindexer import LamportReindexer
+from opoly.modules.scanner import FourierMotzkinScanner
 from opoly.modules.generator import PseudoCodeGenerator, CCodeGenerator
 
 
@@ -18,7 +18,7 @@ class TestPseudocodeForLoopParserToPseudoCodeGenerator():
         deps_np = np.array(list(list(d.converted_values) for d in deps))
         schedule, _ = LamportCPScheduler().schedule(deps_np)
         allocation, _ = LamportCPAllocator().allocate(schedule)
-        reindexed_loop = LamportReindexer().reindex(loop, allocation)
+        reindexed_loop = FourierMotzkinScanner().reindex(loop, allocation)
         parallel_code = PseudoCodeGenerator().generate(reindexed_loop)
         return parallel_code
 
@@ -85,7 +85,7 @@ class TestPseudocodeForLoopParserToCCodeGenerator():
         deps_np = np.array(list(list(d.converted_values) for d in deps))
         schedule, _ = LamportCPScheduler().schedule(deps_np)
         allocation, _ = LamportCPAllocator().allocate(schedule)
-        reindexed_loop = LamportReindexer().reindex(loop, allocation)
+        reindexed_loop = FourierMotzkinScanner().reindex(loop, allocation)
         parallel_code = CCodeGenerator().generate(reindexed_loop)
         return parallel_code
 
@@ -140,6 +140,29 @@ class TestPseudocodeForLoopParserToCCodeGenerator():
     #pragma omp parallel for
     for(int new_j = fmax(1, ceil((1.0 / 2.0) * (-L - M + new_i + 4))); new_j <= fmin(N - 1, floor((1.0 / 2.0) * (new_i - 2))); new_j++) {
         for(int new_k = fmax(1, -M + new_i - 2 * new_j + 2); new_k <= fmin(L - 2, new_i - 2 * new_j - 1); new_k++) {
+            int i = new_j;
+            int j = new_i - 2 * new_j - new_k;
+            int k = new_k;
+            u[j][k] = (u[j + 1][k] + u[j][k + 1] + u[j - 1][k] + u[j][k - 1]) * 0.25;
+        }
+    }
+}"""
+
+    def test_3d_loop_lamport(self):
+        code = """
+            FOR i FROM 1 TO L {
+                FOR j FROM 2 TO M {
+                    FOR k FROM 2 TO N {
+                        STM u[j][k] = (u[j+1][k] + u[j][k+1] + u[j-1][k] + u[j][k-1]) * 0.25;
+                    }
+                }
+            }
+            """
+        parallel_code = self._pipeline_parser_scheduler(code)
+        assert parallel_code == """for(int new_i = 6; new_i <= 2 * L + M + N; new_i++) {
+    #pragma omp parallel for
+    for(int new_j = fmax(1, ceil((1.0 / 2.0) * (-M - N + new_i))); new_j <= fmin(L, floor((1.0 / 2.0) * (new_i - 4))); new_j++) {
+        for(int new_k = fmax(2, -M + new_i - 2 * new_j); new_k <= fmin(N, new_i - 2 * new_j - 2); new_k++) {
             int i = new_j;
             int j = new_i - 2 * new_j - new_k;
             int k = new_k;

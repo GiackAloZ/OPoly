@@ -5,10 +5,10 @@ from opoly.modules.checker import LamportForLoopChecker
 from opoly.modules.detector import LamportLoopDependenciesDetector
 from opoly.modules.scheduler import LamportCPScheduler
 from opoly.modules.allocator import LamportCPAllocator
-from opoly.modules.reindexer import LamportReindexer
+from opoly.modules.scanner import FourierMotzkinScanner
 
 
-class TestPseudocodeForLoopParserToLamportReindexer():
+class TestPseudocodeForLoopParserToFourierMotzkinScanner():
 
     def _pipeline_parser_scheduler(self, code: str) -> np.ndarray:
         loop, _ = PseudocodeForLoopParser().parse_for_loop(code)
@@ -17,7 +17,7 @@ class TestPseudocodeForLoopParserToLamportReindexer():
         deps_np = np.array(list(list(d.converted_values) for d in deps))
         schedule, _ = LamportCPScheduler().schedule(deps_np)
         allocation, _ = LamportCPAllocator().allocate(schedule)
-        reindexed_loop = LamportReindexer().reindex(loop, allocation)
+        reindexed_loop = FourierMotzkinScanner().reindex(loop, allocation)
         return reindexed_loop
 
     def test_1d_loop(self):
