@@ -96,18 +96,15 @@ def enclose_bounds(
     enclosed_bounds_dict = {}
     for var, bounds in bounds_dict.items():
         lowers, uppers = bounds
-        ceiled_lowers = map(lambda l: sp.ceiling(l)
-                            if isinstance(l, sp.core.mul.Mul) and
-                            any(map(lambda l: l.is_rational and not l.is_integer, l.as_two_terms())) else l, lowers)
-        floored_uppers = map(lambda l: sp.floor(l)
-                             if isinstance(l, sp.core.mul.Mul) and
-                             any(map(lambda l: l.is_rational and
-                                     not l.is_integer, l.as_two_terms()))
-                             else l,
-                             uppers)
+        to_ceil = any(map(lambda l: isinstance(l, sp.core.mul.Mul) and
+                                    any(map(lambda ll: ll.is_rational and not ll.is_integer, l.as_two_terms())),
+                          lowers))
+        to_floor = any(map(lambda u: isinstance(u, sp.core.mul.Mul) and
+                                     any(map(lambda uu: uu.is_rational and not uu.is_integer, u.as_two_terms())),
+                           uppers))
         enclosed_bounds_dict[var] = (
-            sp.Max(*ceiled_lowers),
-            sp.Min(*floored_uppers)
+            sp.ceiling(sp.Max(*lowers)) if to_ceil else sp.Max(*lowers),
+            sp.floor(sp.Min(*uppers)) if to_floor else sp.Min(*uppers)
         )
     return enclosed_bounds_dict
 
@@ -144,7 +141,7 @@ class FourierMotzkinScanner():
             if b.is_constant():
                 res.append(b.value)
             elif b.is_variable():
-                res.append(sp.var(b.name))
+                res.append(sp.var(b.name, integer=True))
             else:
                 v, c = get_simple_variable_sum_and_constant(b)
                 found = False
@@ -154,14 +151,14 @@ class FourierMotzkinScanner():
                         res.append(inv_indexes[i] + c.value)
                         break
                 if not found:
-                    res.append(sp.var(v.name) + c.value)
+                    res.append(sp.var(v.name, integer=True) + c.value)
         return sp.Matrix(res)
 
     def reindex(self, loop: ForLoopStatement, allocation: np.ndarray, separate_bounds: bool = False) -> ForLoopStatement:
         old_indexes = extract_loop_indexes(loop)
         new_indexes = list(VariableExpression("new_" + i.name) for i in old_indexes) #pylint: disable=no-member
         indexes = sp.Matrix(list(
-            [sp.var(i.name) for i in new_indexes]
+            [sp.var(i.name, integer=True) for i in new_indexes]
         ))
         inverted_allocation = invert_integer_matrix(allocation)
         lower_bounds, upper_bounds = list(zip(*extract_loop_bounds(loop)))

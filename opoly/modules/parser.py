@@ -111,6 +111,39 @@ def parse_simple_function_expression(code: str) -> (FunctionExpression, str):
         return None, "Function expression not well formatted"
     return FunctionExpression(name, args=terms), code[match.span()[1]:]
 
+def parse_function_expression(code: str) -> (FunctionExpression, str):
+    if len(code) == 0:
+        return None, "Expected function expression"
+    i = 0
+    while i < len(code) and (code[i].isalpha() or code[i] == "_"):
+        i += 1
+    name = code[:i]
+    if name == "":
+        return None, "Expected function name"
+    print(name)
+    code = code[i:]
+    if len(code) == 0 or code[0] != "(":
+        return None, "Expected ("
+    expressions = []
+    while True:
+        expr, rem_code = parse_expression(code[1:], term_char=",")
+        if expr is None:
+            break
+        rem_code = rem_code.strip()
+        if len(rem_code) == 0 or rem_code[0] != ",":
+            return None, "Expected ,"
+        code = rem_code
+        expressions.append(expr)
+        
+    last_expr, rem_code = parse_expression(code[1:], term_char=")")
+    if last_expr is None:
+        return None, rem_code
+    expressions.append(last_expr)
+    rem_code = rem_code.strip()
+    if len(rem_code) == 0 or rem_code[0] != ")":
+        return None, "Expected )"
+    return FunctionExpression(name, tuple(expressions)), rem_code[1:]
+
 def parse_unary_expression(code: str) -> (UnaryExpression, str):
     if len(code) == 0:
         return None, "Expected unary expression"
@@ -131,7 +164,7 @@ def parse_single_expression(code: str) -> (Expression, str):
 
     # Check different subexpression terms
     if FUNCTION_EXPRESSION_REGEX.match(code) is not None:
-        next_term, code = parse_simple_function_expression(code)
+        next_term, code = parse_function_expression(code)
     elif code[0].isalpha():
         next_term, code = parse_variable_expression(code)
     elif code[0].isnumeric():

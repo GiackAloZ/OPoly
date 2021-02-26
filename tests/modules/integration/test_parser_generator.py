@@ -1,3 +1,5 @@
+import pytest
+
 import numpy as np
 
 from opoly.modules.parser import PseudocodeForLoopParser
@@ -45,8 +47,9 @@ class TestPseudocodeForLoopParserToPseudoCodeGenerator():
     def test_2d_loop_example2(self):
         code = "FOR i FROM 1 TO N-1 { FOR j FROM 1 TO M-1 { STM a[j] = (a[j-1] + a[j] + a[j+1]) / 3.0; } }"
         parallel_code = self._pipeline_parser_scheduler(code)
+        print(parallel_code)
         assert parallel_code == """FOR new_i FROM 3 TO M + 2 * N - 3 STEP 1 {
-    FOR CONC new_j FROM fmax(1, ceil((1.0 / 2.0) * (-M + new_i + 1))) TO fmin(N - 1, floor((1.0 / 2.0) * (new_i - 1))) STEP 1 {
+    FOR CONC new_j FROM ceil(fmax(1, (1.0 / 2.0) * (-M + new_i + 1))) TO floor(fmin(N - 1, (1.0 / 2.0) * (new_i - 1))) STEP 1 {
         VAR i = new_j;
         VAR j = new_i - 2 * new_j;
         STM a[j] = (a[j - 1] + a[j] + a[j + 1]) / 3.0;
@@ -65,7 +68,7 @@ class TestPseudocodeForLoopParserToPseudoCodeGenerator():
         """
         parallel_code = self._pipeline_parser_scheduler(code)
         assert parallel_code == """FOR new_i FROM 4 TO L + M + 2 * N - 6 STEP 1 {
-    FOR CONC new_j FROM fmax(1, ceil((1.0 / 2.0) * (-L - M + new_i + 4))) TO fmin(N - 1, floor((1.0 / 2.0) * (new_i - 2))) STEP 1 {
+    FOR CONC new_j FROM ceil(fmax(1, (1.0 / 2.0) * (-L - M + new_i + 4))) TO floor(fmin(N - 1, (1.0 / 2.0) * (new_i - 2))) STEP 1 {
         FOR new_k FROM fmax(1, -M + new_i - 2 * new_j + 2) TO fmin(L - 2, new_i - 2 * new_j - 1) STEP 1 {
             VAR i = new_j;
             VAR j = new_i - 2 * new_j - new_k;
@@ -75,7 +78,7 @@ class TestPseudocodeForLoopParserToPseudoCodeGenerator():
     }
 }"""
 
-
+# @pytest.mark.skip(reason="too slow to test every time")
 class TestPseudocodeForLoopParserToCCodeGenerator():
 
     def _pipeline_parser_scheduler(self, code: str) -> np.ndarray:
@@ -117,7 +120,7 @@ class TestPseudocodeForLoopParserToCCodeGenerator():
         print(parallel_code)
         assert parallel_code == """for(int new_i = 3; new_i <= M + 2 * N - 3; new_i++) {
     #pragma omp parallel for
-    for(int new_j = fmax(1, ceil((1.0 / 2.0) * (-M + new_i + 1))); new_j <= fmin(N - 1, floor((1.0 / 2.0) * (new_i - 1))); new_j++) {
+    for(int new_j = ceil(fmax(1, (1.0 / 2.0) * (-M + new_i + 1))); new_j <= floor(fmin(N - 1, (1.0 / 2.0) * (new_i - 1))); new_j++) {
         int i = new_j;
         int j = new_i - 2 * new_j;
         a[j] = (a[j - 1] + a[j] + a[j + 1]) / 3.0;
@@ -138,7 +141,7 @@ class TestPseudocodeForLoopParserToCCodeGenerator():
         print(parallel_code)
         assert parallel_code == """for(int new_i = 4; new_i <= L + M + 2 * N - 6; new_i++) {
     #pragma omp parallel for
-    for(int new_j = fmax(1, ceil((1.0 / 2.0) * (-L - M + new_i + 4))); new_j <= fmin(N - 1, floor((1.0 / 2.0) * (new_i - 2))); new_j++) {
+    for(int new_j = ceil(fmax(1, (1.0 / 2.0) * (-L - M + new_i + 4))); new_j <= floor(fmin(N - 1, (1.0 / 2.0) * (new_i - 2))); new_j++) {
         for(int new_k = fmax(1, -M + new_i - 2 * new_j + 2); new_k <= fmin(L - 2, new_i - 2 * new_j - 1); new_k++) {
             int i = new_j;
             int j = new_i - 2 * new_j - new_k;
@@ -161,7 +164,7 @@ class TestPseudocodeForLoopParserToCCodeGenerator():
         parallel_code = self._pipeline_parser_scheduler(code)
         assert parallel_code == """for(int new_i = 6; new_i <= 2 * L + M + N; new_i++) {
     #pragma omp parallel for
-    for(int new_j = fmax(1, ceil((1.0 / 2.0) * (-M - N + new_i))); new_j <= fmin(L, floor((1.0 / 2.0) * (new_i - 4))); new_j++) {
+    for(int new_j = ceil(fmax(1, (1.0 / 2.0) * (-M - N + new_i))); new_j <= floor(fmin(L, (1.0 / 2.0) * (new_i - 4))); new_j++) {
         for(int new_k = fmax(2, -M + new_i - 2 * new_j); new_k <= fmin(N, new_i - 2 * new_j - 2); new_k++) {
             int i = new_j;
             int j = new_i - 2 * new_j - new_k;
@@ -170,3 +173,29 @@ class TestPseudocodeForLoopParserToCCodeGenerator():
         }
     }
 }"""
+
+#     def test_separate_bounds(self):
+#         code = """
+#             FOR i FROM 1 TO L {
+#                 FOR j FROM 2 TO M {
+#                     FOR k FROM 2 TO N {
+#                         STM u[j][k] = (u[j+1][k] + u[j][k+1] + u[j-1][k] + u[j][k-1]) * 0.25;
+#                     }
+#                 }
+#             }
+#             """
+#         parallel_code = self._pipeline_parser_scheduler(code)
+#         assert parallel_code == """for(int new_i = 6; new_i <= 2 * L + M + N; new_i++) {
+#     int new_j_lb = ceil(fmax(1, (1.0 / 2.0) * (-M - N + new_i)));
+#     int new_j_ub = floor(fmin(L, (1.0 / 2.0) * (new_i - 4)));
+#     #pragma omp parallel for
+#     for(int new_j = new_j_lb; new_j <= new_j_ub; new_j++) {
+#         for(int new_k = fmax(2, -M + new_i - 2 * new_j); new_k <= fmin(N, new_i - 2 * new_j - 2); new_k++) {
+#             int i = new_j;
+#             int j = new_i - 2 * new_j - new_k;
+#             int k = new_k;
+#             u[j][k] = (u[j + 1][k] + u[j][k + 1] + u[j - 1][k] + u[j][k - 1]) * 0.25;
+#         }
+#     }
+# }"""
+

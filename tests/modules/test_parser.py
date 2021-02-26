@@ -4,6 +4,7 @@ from opoly.modules.parser import (
     parse_variable_expression,
     parse_grouping_expression,
     parse_simple_function_expression,
+    parse_function_expression,
     parse_operator,
     parse_expression,
     parse_assignment_statement,
@@ -167,6 +168,31 @@ class TestParsingFunctions():
             assert parsed is None
             assert error == err
     
+    def test_function_parser(self):
+        goods = {
+            "max(a)": ("max(a)", ""),
+            "max(a) + i": ("max(a)", " + i"),
+            "max(a, b, c) + i": ("max(a, b, c)", " + i"),
+            "ceil(max(a, b), min(a, b, c))": ("ceil(max(a, b), min(a, b, c))", ""),
+            "ceil(max(a, b/2), min(a, b, c))": ("ceil(max(a, b / 2), min(a, b, c))", "")
+        }
+        bads = {
+            "": "Expected function expression",
+            "max": "Expected (",
+            "max(a": "Expected ,",
+            "max(,a)": "Unsupported expression term",
+            "max(a b)": "Unsupported operator",
+        }
+        for code, res in goods.items():
+            parsed, rem = parse_function_expression(code)
+            assert parsed is not None
+            assert str(parsed) == res[0]
+            assert rem == res[1]
+        for code, err in bads.items():
+            parsed, error = parse_function_expression(code)
+            assert parsed is None
+            assert error == err
+    
     def test_unary_expression_parser(self):
         goods = {
             "-1": ("-1", ""),
@@ -197,7 +223,8 @@ class TestParsingFunctions():
             "a[i] + b[i] / 3": ("a[i] + b[i] / 3", ""),
             "a[i+1][j+1] + a[i-1][j-1] / 3": ("a[i + 1][j + 1] + a[i - 1][j - 1] / 3", ""),
             "(a[i+1][j+1] + a[i-1][j-1]) / 3.0": ("(a[i + 1][j + 1] + a[i - 1][j - 1]) / 3.0", ""),
-            "(-n + i - 1) / 2.0": ("(-n + i - 1) / 2.0", "")
+            "(-n + i - 1) / 2.0": ("(-n + i - 1) / 2.0", ""),
+            "floor(min(1, (1.0/3.0) * (2 * a + b), 2 * i), a + c)": ("floor(min(1, (1.0 / 3.0) * (2 * a + b), 2 * i), a + c)", "")
         }
         bads = {
             "": "Expected expression",
