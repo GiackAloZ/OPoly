@@ -1,14 +1,20 @@
-par int: n;
-par int: k;
+% Parameters definitions
+par int: n;                     % Number of indexes
+par int: r;                     % Number of dependencies
 set of int: N = 1..n;
-set of int: K = 1..k;
-array[K,N] of par int: deps;
-array[N] of var int: a;
-
-constraint forall(r in K)(
-    sum(i in N)(deps[r,i] * a[i]) > 0
+set of int: R = 1..r;
+array[R,N] of par int: D;       % Dependency matrix
+% ---------------------
+% Variables definitions
+array[N] of var int: tau;       % Schedule vector
+% -----------------------
+% Constraints definitions
+% Valid schedule constraint
+constraint forall(j in R)(
+    sum(i in N)(D[j,i] * tau[i]) > 0
 );
-
-constraint forall(i in N)(a[i] >= 0);
-
-solve minimize sum(i in N)(a[i]);
+% Nonnegative coefficients
+constraint forall(i in N)(tau[i] >= 0);
+% -----------------------
+% Minimization objective (minimal latency schedule)
+solve minimize sum(i in N)(tau[i]);

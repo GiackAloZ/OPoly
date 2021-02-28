@@ -1,7 +1,8 @@
 from pkg_resources import resource_filename
 
-import opoly.modules.minizinc as minizinc
 import pymzn
+
+import opoly.modules.minizinc as minizinc
 
 
 def solve_model(
@@ -15,7 +16,8 @@ def solve_model(
             mzn=model,
             data=data,
             solver=solver,
-            timeout=timeout
+            timeout=timeout,
+            include=minizinc.INCLUDE_FOLDER_PATH
         )
     except Exception as ex:
         return None, f"An error occurred!\n{ex}"

@@ -24,7 +24,7 @@ setuptools.setup(
     keywords="compiler polyhedral optimization parallel omp c",
     packages=setuptools.find_packages(),
     package_data={
-        "opoly.modules.minizinc": ["models/*.mzn"],
+        "opoly.modules.minizinc": ["models/*.mzn", "libraries/*.mzn"],
     },
     install_requires=[
         "numpy>=1.19",
