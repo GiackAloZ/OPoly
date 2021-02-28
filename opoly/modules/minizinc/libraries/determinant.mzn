@@ -4,7 +4,7 @@ function array[int,int] of var int: submatrix(int: i, int: j, int: dim, array[in
 
 % Computes the cofactor of the element (i,j) of the matrix M
 function var int: cofactor(int: i, int: j, int: dim, array[int,int] of var int: M) =
-    pow(-1, i+j) * det(dim-1, submatrix(i, j, dim, M));
+    pow(-1, i+j) * determinant(dim-1, submatrix(i, j, dim, M));
 
 % Calculates the determinant of a (dim)x(dim) matrix M using Laplace expansion
 function var int: determinant(int: dim, array[int,int] of var int: M) =
