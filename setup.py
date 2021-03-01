@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="opoly", # Replace with your own username
-    version="0.1.0",
+    version="0.1.3",
     author="Giacomo Aloisi (GiackAloZ)",
     author_email="giacomo.aloisi1998@gmail.com",
     description="OPoly: a simple OpenMP polyhedral compilator",

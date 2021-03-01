@@ -120,7 +120,6 @@ def parse_function_expression(code: str) -> (FunctionExpression, str):
     name = code[:i]
     if name == "":
         return None, "Expected function name"
-    print(name)
     code = code[i:]
     if len(code) == 0 or code[0] != "(":
         return None, "Expected ("
