@@ -2,6 +2,7 @@
 .pytest_cache
 .coverage
 .ipynb_checkpoints
+.DS_Store
 
 __pycache__
 htmlcov
@@ -9,3 +10,10 @@ htmlcov
 dist
 build
 *.egg-info
+
+benchmarks/input/*.txt
+benchmarks/output/*
+benchmarks/src/*
+!benchmarks/src/*.c
+!benchmarks/src/*.h
+!benchmarks/src/Makefile

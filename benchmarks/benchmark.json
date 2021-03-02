@@ -1,0 +1,314 @@
+[
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 1,
+        "speedup": 1,
+        "time": 7.1135171999999995,
+        "type": "serial"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 1,
+        "speedup": 1,
+        "time": 13.499885599999999,
+        "type": "serial"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 1,
+        "speedup": 1,
+        "time": 31.4627746,
+        "type": "serial"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 1,
+        "speedup": 1,
+        "time": 8.095035,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 2,
+        "speedup": 1.81751733369676,
+        "time": 4.453897,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 3,
+        "speedup": 2.543534630003561,
+        "time": 3.1825928000000006,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 4,
+        "speedup": 3.1306962375343135,
+        "time": 2.585698,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 5,
+        "speedup": 3.6631265797306476,
+        "time": 2.2098704000000002,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 6,
+        "speedup": 4.103158379201157,
+        "time": 1.972879,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 7,
+        "speedup": 4.541482263835247,
+        "time": 1.7824654,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 8,
+        "speedup": 4.719987858109674,
+        "time": 1.7150541999999998,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 9,
+        "speedup": 4.505125636530595,
+        "time": 1.7968499999999998,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 10,
+        "speedup": 5.105627695580014,
+        "time": 1.5855122000000001,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 11,
+        "speedup": 5.189004588483267,
+        "time": 1.5600361999999999,
+        "type": "parallel"
+    },
+    {
+        "dim": "1d",
+        "input": "1d-10k-100k.txt",
+        "p": 12,
+        "speedup": 4.205405671054643,
+        "time": 1.9249117999999998,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 1,
+        "speedup": 1,
+        "time": 18.6495662,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 2,
+        "speedup": 1.4341293379749656,
+        "time": 13.0041034,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 3,
+        "speedup": 1.8426928730234138,
+        "time": 10.1208218,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 4,
+        "speedup": 2.3516289021586894,
+        "time": 7.930488599999999,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 5,
+        "speedup": 2.810327447682616,
+        "time": 6.636083000000001,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 6,
+        "speedup": 3.182394597236498,
+        "time": 5.8602305999999995,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 7,
+        "speedup": 3.7446497849778106,
+        "time": 4.980323199999999,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 8,
+        "speedup": 4.203555402526051,
+        "time": 4.436617199999999,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 9,
+        "speedup": 4.547439332212629,
+        "time": 4.1011138,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 10,
+        "speedup": 5.05523678060071,
+        "time": 3.6891578000000003,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 11,
+        "speedup": 5.490708268969352,
+        "time": 3.3965683999999996,
+        "type": "parallel"
+    },
+    {
+        "dim": "2d",
+        "input": "2d-1k-1k-1k.txt",
+        "p": 12,
+        "speedup": 5.067426104475964,
+        "time": 3.6802838,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 1,
+        "speedup": 1,
+        "time": 40.4636912,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 2,
+        "speedup": 1.4386892752334137,
+        "time": 28.125386,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 3,
+        "speedup": 2.1042266395856704,
+        "time": 19.229721,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 4,
+        "speedup": 2.651413809187987,
+        "time": 15.261175399999999,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 5,
+        "speedup": 3.171408673611842,
+        "time": 12.758901599999998,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 6,
+        "speedup": 3.734708998564991,
+        "time": 10.834496399999999,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 7,
+        "speedup": 4.210726754257055,
+        "time": 9.6096692,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 8,
+        "speedup": 4.712661949201393,
+        "time": 8.5861646,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 9,
+        "speedup": 5.135071169198029,
+        "time": 7.879869599999999,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 10,
+        "speedup": 5.508724487205091,
+        "time": 7.345383000000001,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 11,
+        "speedup": 5.583433083594775,
+        "time": 7.247098800000001,
+        "type": "parallel"
+    },
+    {
+        "dim": "3d",
+        "input": "3d-100-200-200-200.txt",
+        "p": 12,
+        "speedup": 5.469588550089196,
+        "time": 7.3979406,
+        "type": "parallel"
+    }
+]
